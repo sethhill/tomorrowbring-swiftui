@@ -170,7 +170,7 @@ struct CheckInView: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
 
-            Button("🔄  Start Over", action: restart)
+            Button("Start Over", action: restart)
                 .buttonStyle(.borderedProminent)
                 .tint(.brandGreen)
                 .controlSize(.large)
