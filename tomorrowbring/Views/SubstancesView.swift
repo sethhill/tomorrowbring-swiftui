@@ -6,25 +6,27 @@
 //
 
 import SwiftUI
+import SwiftData
 
-/// Tracker for substances: THC and alcohol.
+/// Tracker for substances. A segmented control switches between the THC and
+/// Alcohol trackers, each shown by `SubstanceTrackerView`.
 struct SubstancesView: View {
+    @State private var selectedKind: SubstanceKind = .thc
+
     var body: some View {
-        VStack(spacing: 16) {
-            Image(systemName: "wineglass.fill")
-                .font(.largeTitle)
-                .foregroundColor(.brandGold)
+        VStack(spacing: 0) {
+            Picker("Substance", selection: $selectedKind) {
+                ForEach(SubstanceKind.allCases) { kind in
+                    Text(kind.rawValue).tag(kind)
+                }
+            }
+            .pickerStyle(.segmented)
+            .padding()
 
-            Text("Substances")
-                .font(.title)
-                .bold()
-
-            Text("Track THC and alcohol here.")
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-                .multilineTextAlignment(.center)
+            SubstanceTrackerView(kind: selectedKind)
+                // Rebuild the tracker (and its @Query) when the substance changes.
+                .id(selectedKind)
         }
-        .padding()
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .background(Color.appBackground.ignoresSafeArea())
         .navigationTitle("Substances")
@@ -32,5 +34,8 @@ struct SubstancesView: View {
 }
 
 #Preview {
-    SubstancesView()
+    NavigationStack {
+        SubstancesView()
+    }
+    .modelContainer(SubstancePreviewData.container)
 }

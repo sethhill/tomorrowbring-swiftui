@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import SwiftData
 
 @main
 struct tomorrowbringApp: App {
@@ -14,5 +15,6 @@ struct tomorrowbringApp: App {
             ContentView()
                 .background(Color.appBackground.ignoresSafeArea())
         }
+        .modelContainer(for: SubstanceLog.self)
     }
 }
