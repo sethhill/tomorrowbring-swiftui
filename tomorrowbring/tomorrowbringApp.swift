@@ -12,6 +12,7 @@ struct tomorrowbringApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .background(Color.appBackground.ignoresSafeArea())
         }
     }
 }
