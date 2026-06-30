@@ -32,7 +32,7 @@ struct SubstanceTrackerView: View {
             VStack(alignment: .leading, spacing: 28) {
                 weeklySection
                 heatmapSection
-                paragraph(title: "This week's trend", text: Self.trendPlaceholder)
+                paragraph(title: "This week’s trend", text: Self.trendPlaceholder)
                 paragraph(title: "Suggestions", text: Self.suggestionsPlaceholder)
             }
             .padding()
