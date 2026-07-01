@@ -18,6 +18,14 @@ struct MovementView: View {
     @State private var healthNote: String?
     @State private var isLogging = false
 
+    @State private var condition = MovementView.placeholderCondition
+    @State private var coaching = MovementView.placeholderCoaching
+    @State private var isGeneratingInsight = false
+
+    /// Cached insight, keyed by a signature of the movement data so it
+    /// regenerates whenever a new activity (Health or manual) is recorded.
+    @AppStorage("movementInsightCache") private var insightCacheData = Data()
+
     /// All activities (Health + manual), most recent first.
     private var activities: [MovementActivity] {
         let manual = manualEntries.map { entry in
@@ -39,10 +47,11 @@ struct MovementView: View {
     }
 
     var body: some View {
-        ScrollView {
+        ScrollView(.vertical) {
             VStack(alignment: .leading, spacing: 24) {
                 summarySection
                 heatmapSection
+                insightSection
 
                 if let healthNote {
                     Text(healthNote)
@@ -52,8 +61,10 @@ struct MovementView: View {
 
                 recentSection
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
             .padding()
         }
+        .scrollBounceBehavior(.basedOnSize, axes: [.horizontal])
         .safeAreaInset(edge: .bottom) {
             Button {
                 isLogging = true
@@ -73,7 +84,14 @@ struct MovementView: View {
             LogMovementSheet()
                 .presentationDetents([.medium])
         }
-        .task { await loadHealthWorkouts() }
+        .task {
+            await loadHealthWorkouts()
+            await loadOrGenerateInsight()
+        }
+        .onChange(of: manualEntries.count) { _, _ in
+            // A newly logged workout changes the data signature; refresh insight.
+            Task { await loadOrGenerateInsight() }
+        }
     }
 
     // MARK: - Sections
@@ -97,6 +115,32 @@ struct MovementView: View {
             Text("Last 90 days")
                 .font(.headline)
             DailyHeatmap(days: dailyTotals(days: 90), tint: .brandOrange)
+                .padding(16)
+                .background(RoundedRectangle(cornerRadius: 16).fill(.white))
+        }
+    }
+
+    private var insightSection: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            VStack(alignment: .leading, spacing: 6) {
+                HStack(spacing: 8) {
+                    Text("Where you’re at")
+                        .font(.headline)
+                    if isGeneratingInsight {
+                        ProgressView().controlSize(.small)
+                    }
+                }
+                Text(condition)
+                    .font(.body)
+                    .foregroundStyle(.primary)
+            }
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Coaching")
+                    .font(.headline)
+                Text(coaching)
+                    .font(.body)
+                    .foregroundStyle(.primary)
+            }
         }
     }
 
@@ -195,6 +239,113 @@ struct MovementView: View {
         return "\(Int(meters)) m"
     }
 
+    // MARK: - Insight generation
+
+    /// A signature of the current movement data. Changes whenever an activity is
+    /// added (from Health or manually), triggering regeneration.
+    private var dataSignature: String {
+        let latest = activities.first?.date.timeIntervalSince1970 ?? 0
+        return "\(activities.count)|\(Int(latest))"
+    }
+
+    /// Shows the cached insight for the current data, or generates a fresh one
+    /// on-device (falling back to placeholder text) and caches it.
+    private func loadOrGenerateInsight() async {
+        guard !isGeneratingInsight else { return }
+        let signature = dataSignature
+
+        if let cached = loadInsightCache(), cached.signature == signature {
+            condition = cached.condition
+            coaching = cached.coaching
+            return
+        }
+
+        isGeneratingInsight = true
+        defer { isGeneratingInsight = false }
+
+        let generator = MovementInsightGenerator()
+        let context = movementContext()
+        let insight = await withInsightTimeout(seconds: 20) {
+            await generator.generate(context: context)
+        }
+        if let insight {
+            condition = insight.condition
+            coaching = insight.coaching
+            saveInsightCache(signature: signature, insight: insight)
+        } else {
+            condition = Self.placeholderCondition
+            coaching = Self.placeholderCoaching
+        }
+    }
+
+    /// Builds a short natural-language summary of recent movement for the model.
+    private func movementContext() -> String {
+        guard !activities.isEmpty else {
+            return "They haven't recorded any workouts yet."
+        }
+        let calendar = Calendar.current
+        let now = Date.now
+        let weekAgo = calendar.date(byAdding: .day, value: -7, to: now) ?? now
+        let twoWeeksAgo = calendar.date(byAdding: .day, value: -14, to: now) ?? now
+
+        let thisWeekActs = activities.filter { $0.date >= weekAgo }
+        let priorActs = activities.filter { $0.date >= twoWeeksAgo && $0.date < weekAgo }
+        let thisMinutes = Int(thisWeekActs.reduce(0) { $0 + $1.durationMinutes })
+        let priorMinutes = Int(priorActs.reduce(0) { $0 + $1.durationMinutes })
+
+        let typeCounts = Dictionary(grouping: thisWeekActs, by: { $0.type.name }).mapValues(\.count)
+        let typesText = typeCounts.isEmpty
+            ? "no workouts"
+            : typeCounts.map { "\($0.value) \($0.key)" }.joined(separator: ", ")
+
+        let trend: String
+        if priorMinutes == 0 {
+            trend = "up from nothing the previous week"
+        } else if thisMinutes > priorMinutes {
+            trend = "up from \(priorMinutes) min the previous week"
+        } else if thisMinutes < priorMinutes {
+            trend = "down from \(priorMinutes) min the previous week"
+        } else {
+            trend = "about the same as the previous week"
+        }
+
+        return "Over the last 7 days: \(thisWeekActs.count) workouts totaling \(thisMinutes) minutes (\(typesText)), \(trend)."
+    }
+
+    private func loadInsightCache() -> CachedMovementInsight? {
+        try? JSONDecoder().decode(CachedMovementInsight.self, from: insightCacheData)
+    }
+
+    private func saveInsightCache(signature: String, insight: MovementInsight) {
+        let cached = CachedMovementInsight(
+            signature: signature,
+            condition: insight.condition,
+            coaching: insight.coaching
+        )
+        insightCacheData = (try? JSONEncoder().encode(cached)) ?? Data()
+    }
+
+    /// Runs `operation`, returning `nil` if it doesn't finish within `seconds`,
+    /// so a slow or wedged model can't leave the insight spinning forever.
+    private func withInsightTimeout(
+        seconds: Double,
+        operation: @escaping () async -> MovementInsight?
+    ) async -> MovementInsight? {
+        await withTaskGroup(of: MovementInsight?.self) { group in
+            group.addTask { await operation() }
+            group.addTask {
+                try? await Task.sleep(for: .seconds(seconds))
+                return nil
+            }
+            let result = await group.next() ?? nil
+            group.cancelAll()
+            return result
+        }
+    }
+
+    private static let placeholderCondition = "Once you’ve recorded some movement, a summary of your recent activity and trend will appear here."
+    private static let placeholderCoaching = "Encouraging, personalized coaching for your movement will appear here."
+
     /// Loads recent workouts from Apple Health when available.
     private func loadHealthWorkouts() async {
         #if canImport(HealthKit)
@@ -211,6 +362,13 @@ struct MovementView: View {
         healthNote = "Apple Health isn’t available on this platform — showing manual entries only."
         #endif
     }
+}
+
+/// A Codable snapshot of a generated movement insight, cached by data signature.
+private struct CachedMovementInsight: Codable {
+    var signature: String
+    var condition: String
+    var coaching: String
 }
 
 #Preview {

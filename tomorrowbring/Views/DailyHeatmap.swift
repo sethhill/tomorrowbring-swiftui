@@ -8,13 +8,14 @@
 import SwiftUI
 
 /// A GitHub-contributions-style heatmap: one cell per day, arranged in
-/// weekday-aligned week columns, shaded by relative intensity. The grid fills
-/// the available width, with cells sized to stay square.
+/// weekday-aligned week columns, shaded by relative intensity. Cells are sized
+/// from the measured width so the grid never exceeds its container.
 struct DailyHeatmap: View {
     let days: [DayTotal]
     let tint: Color
 
     private let spacing: CGFloat = 3
+    @State private var cellSize: CGFloat = 12
 
     private var maxAmount: Double {
         max(days.map(\.amount).max() ?? 0, 1)
@@ -38,25 +39,40 @@ struct DailyHeatmap: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            HStack(alignment: .top, spacing: spacing) {
-                ForEach(Array(weeks.enumerated()), id: \.offset) { _, week in
-                    VStack(spacing: spacing) {
-                        ForEach(0..<7, id: \.self) { row in
-                            cell(row < week.count ? week[row] : nil)
-                        }
+            grid
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .onGeometryChange(for: CGFloat.self) { proxy in
+                    proxy.size.width
+                } action: { width in
+                    updateCellSize(forWidth: width)
+                }
+            legend
+        }
+    }
+
+    private var grid: some View {
+        HStack(alignment: .top, spacing: spacing) {
+            ForEach(Array(weeks.enumerated()), id: \.offset) { _, week in
+                VStack(spacing: spacing) {
+                    ForEach(0..<7, id: \.self) { row in
+                        cell(row < week.count ? week[row] : nil)
                     }
                 }
             }
-            // Fill the width while keeping cells square (columns : 7 rows).
-            .aspectRatio(CGFloat(weeks.count) / 7, contentMode: .fit)
-            legend
         }
+    }
+
+    /// Computes the largest whole-point cell size whose columns fit `width`.
+    private func updateCellSize(forWidth width: CGFloat) {
+        let columns = CGFloat(max(weeks.count, 1))
+        let available = width - spacing * (columns - 1)
+        cellSize = max(floor(available / columns), 1)
     }
 
     private func cell(_ day: DayTotal?) -> some View {
         RoundedRectangle(cornerRadius: 2)
             .fill(color(for: day))
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .frame(width: cellSize, height: cellSize)
     }
 
     private func color(for day: DayTotal?) -> Color {
