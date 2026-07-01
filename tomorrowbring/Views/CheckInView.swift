@@ -58,6 +58,10 @@ struct CheckInView: View {
     /// The questions to ask, in order. Replace or extend with your own content.
     let questions: [CheckInQuestion]
 
+    /// Called once the check-in is completed and saved. When provided, the flow
+    /// finishes here (e.g. navigating away) instead of showing the summary.
+    let onComplete: (() -> Void)?
+
     @Environment(\.modelContext) private var modelContext
 
     /// Index of the question currently being shown.
@@ -66,8 +70,12 @@ struct CheckInView: View {
     /// The selected answer for each question, keyed by question id.
     @State private var responses: [UUID: String] = [:]
 
-    init(questions: [CheckInQuestion] = CheckInView.sampleQuestions) {
+    init(
+        questions: [CheckInQuestion] = CheckInView.sampleQuestions,
+        onComplete: (() -> Void)? = nil
+    ) {
         self.questions = questions
+        self.onComplete = onComplete
     }
 
     var body: some View {
@@ -83,9 +91,11 @@ struct CheckInView: View {
         .background(Color.appBackground.ignoresSafeArea())
         .animation(.easeInOut, value: currentIndex)
         .onChange(of: currentIndex) { _, newValue in
-            // Save once the flow reaches the summary (all questions answered).
+            // Save once all questions are answered, then hand off to the caller
+            // (e.g. navigate to the briefing) or fall back to the summary.
             if newValue == questions.count {
                 saveCheckIn()
+                onComplete?()
             }
         }
     }

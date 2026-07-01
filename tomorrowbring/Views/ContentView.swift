@@ -62,7 +62,7 @@ struct ContentView: View {
         case .wellbeing: WellbeingView()
         case .movement: MovementView()
         case .substances: SubstancesView()
-        case .checkIn: CheckInView()
+        case .checkIn: CheckInView(onComplete: { selection = .briefing })
         case .settings: SettingsView()
         }
     }
