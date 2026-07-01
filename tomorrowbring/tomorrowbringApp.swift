@@ -18,6 +18,6 @@ struct tomorrowbringApp: App {
                 .environment(lock)
                 .background(Color.appBackground.ignoresSafeArea())
         }
-        .modelContainer(for: [SubstanceLog.self, CheckInEntry.self, WellbeingEntry.self])
+        .modelContainer(for: [SubstanceLog.self, CheckInEntry.self, WellbeingEntry.self, MovementEntry.self])
     }
 }
