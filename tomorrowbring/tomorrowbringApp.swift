@@ -12,7 +12,7 @@ import SwiftData
 struct tomorrowbringApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            RootView()
                 .background(Color.appBackground.ignoresSafeArea())
         }
         .modelContainer(for: [SubstanceLog.self, CheckInEntry.self, WellbeingEntry.self])

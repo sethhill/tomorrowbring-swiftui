@@ -34,7 +34,11 @@ enum AppSection: String, CaseIterable, Identifiable {
 /// Root navigation: an adaptive sidebar listing every section, with the
 /// selected section shown in the detail area.
 struct ContentView: View {
-    @State private var selection: AppSection? = .briefing
+    @State private var selection: AppSection?
+
+    init(initialSection: AppSection = .briefing) {
+        _selection = State(initialValue: initialSection)
+    }
 
     var body: some View {
         NavigationSplitView {
