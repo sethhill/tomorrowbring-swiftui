@@ -49,7 +49,7 @@ struct WellbeingView: View {
     private var recentSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Recent")
-                .font(.headline)
+                .font(.title3.bold())
 
             ForEach(entries.prefix(10)) { entry in
                 HStack {
@@ -95,7 +95,7 @@ private struct MetricRatingRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             Label(title, systemImage: icon)
-                .font(.headline)
+                .font(.title3.bold())
                 .foregroundStyle(tint)
 
             HStack(spacing: 10) {

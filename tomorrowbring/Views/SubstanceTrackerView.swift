@@ -85,7 +85,7 @@ struct SubstanceTrackerView: View {
     private var summarySection: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("This week")
-                .font(.headline)
+                .font(.title3.bold())
             HStack(spacing: 12) {
                 statCard(
                     value: "\(Int(thisWeekLogs.reduce(0) { $0 + $1.amount }))",
@@ -116,7 +116,7 @@ struct SubstanceTrackerView: View {
     private var heatmapSection: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Last 90 days")
-                .font(.headline)
+                .font(.title3.bold())
             DailyHeatmap(days: dailyTotals(days: 90), tint: kind.tint)
                 .padding(16)
                 .background(RoundedRectangle(cornerRadius: 16).fill(.white))
@@ -148,7 +148,7 @@ struct SubstanceTrackerView: View {
             VStack(alignment: .leading, spacing: 6) {
                 HStack(spacing: 8) {
                     Text("Where you’re at")
-                        .font(.headline)
+                        .font(.title3.bold())
                     if isGeneratingInsight {
                         ProgressView().controlSize(.small)
                     }
@@ -159,7 +159,7 @@ struct SubstanceTrackerView: View {
             }
             VStack(alignment: .leading, spacing: 6) {
                 Text("Coaching")
-                    .font(.headline)
+                    .font(.title3.bold())
                 Text(coaching)
                     .font(.body)
                     .foregroundStyle(.primary)
@@ -173,7 +173,7 @@ struct SubstanceTrackerView: View {
     private var recentSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Recent")
-                .font(.headline)
+                .font(.title3.bold())
 
             if logs.isEmpty {
                 Text("No entries yet. Log your first below.")

@@ -347,29 +347,20 @@ extension BriefingView {
     ]
 }
 
-/// A single briefing coaching card: accent icon + headline, then the paragraph.
+/// A single briefing coaching card: a headline, then the paragraph.
 private struct BriefingCardView: View {
     let card: BriefingCard
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack(spacing: 10) {
-                Image(systemName: card.icon)
-                    .font(.headline)
-                    .foregroundStyle(card.tint)
-                Text(card.title)
-                    .font(.headline)
-            }
+        VStack(alignment: .leading, spacing: 8) {
+            Text(card.title)
+                .font(.title3)
+                .bold()
             Text(card.message)
                 .font(.body)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.primary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(16)
-        .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(.white)
-        )
     }
 }
 

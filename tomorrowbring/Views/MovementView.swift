@@ -99,7 +99,7 @@ struct MovementView: View {
     private var summarySection: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("This week")
-                .font(.headline)
+                .font(.title3.bold())
             HStack(spacing: 12) {
                 statCard(value: "\(thisWeek.count)", label: "workouts")
                 statCard(
@@ -113,7 +113,7 @@ struct MovementView: View {
     private var heatmapSection: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Last 90 days")
-                .font(.headline)
+                .font(.title3.bold())
             DailyHeatmap(days: dailyTotals(days: 90), tint: .brandOrange)
                 .padding(16)
                 .background(RoundedRectangle(cornerRadius: 16).fill(.white))
@@ -125,7 +125,7 @@ struct MovementView: View {
             VStack(alignment: .leading, spacing: 6) {
                 HStack(spacing: 8) {
                     Text("Where you’re at")
-                        .font(.headline)
+                        .font(.title3.bold())
                     if isGeneratingInsight {
                         ProgressView().controlSize(.small)
                     }
@@ -136,7 +136,7 @@ struct MovementView: View {
             }
             VStack(alignment: .leading, spacing: 6) {
                 Text("Coaching")
-                    .font(.headline)
+                    .font(.title3.bold())
                 Text(coaching)
                     .font(.body)
                     .foregroundStyle(.primary)
@@ -181,7 +181,7 @@ struct MovementView: View {
     private var recentSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Recent")
-                .font(.headline)
+                .font(.title3.bold())
 
             if activities.isEmpty {
                 Text("No workouts yet. Log one below, or grant Apple Health access to see your recorded activity.")
