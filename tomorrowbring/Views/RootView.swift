@@ -7,16 +7,13 @@
 
 import SwiftUI
 import SwiftData
-import LocalAuthentication
 
-/// The app's entry gate: requires biometric (or device passcode) authentication,
-/// then routes to the check-in or briefing depending on whether the person has
+/// The app's entry gate: shows the lock screen until `AppLock` is unlocked, then
+/// routes to the check-in or briefing depending on whether the person has
 /// already checked in today.
 struct RootView: View {
+    @Environment(AppLock.self) private var lock
     @Query(sort: \CheckInEntry.timestamp, order: .reverse) private var checkIns: [CheckInEntry]
-
-    @State private var isUnlocked = false
-    @State private var authError: String?
 
     /// Whether the most recent check-in was recorded today.
     private var checkedInToday: Bool {
@@ -26,42 +23,15 @@ struct RootView: View {
 
     var body: some View {
         Group {
-            if isUnlocked {
+            if lock.isUnlocked {
                 ContentView(initialSection: checkedInToday ? .briefing : .checkIn)
             } else {
-                LockScreen(error: authError, onUnlock: authenticate)
+                LockScreen(error: lock.authError, onUnlock: { lock.authenticate() })
             }
         }
         .task {
-            if !isUnlocked { authenticate() }
-        }
-    }
-
-    /// Prompts for Face ID / Touch ID, falling back to the device passcode.
-    /// If the device has no authentication configured, the app unlocks rather
-    /// than locking the person out.
-    private func authenticate() {
-        let context = LAContext()
-        context.localizedFallbackTitle = "Use Passcode"
-
-        var policyError: NSError?
-        guard context.canEvaluatePolicy(.deviceOwnerAuthentication, error: &policyError) else {
-            isUnlocked = true
-            return
-        }
-
-        context.evaluatePolicy(
-            .deviceOwnerAuthentication,
-            localizedReason: "Unlock tomorrowbring to see your briefing."
-        ) { success, _ in
-            Task { @MainActor in
-                if success {
-                    isUnlocked = true
-                    authError = nil
-                } else {
-                    authError = "Couldn’t verify it’s you. Tap to try again."
-                }
-            }
+            // Prompt at first launch (scene-phase changes handle later returns).
+            if !lock.isUnlocked { lock.authenticate() }
         }
     }
 }
