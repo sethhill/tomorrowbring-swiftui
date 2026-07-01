@@ -42,6 +42,7 @@ struct MovementView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
                 summarySection
+                heatmapSection
 
                 if let healthNote {
                     Text(healthNote)
@@ -88,6 +89,32 @@ struct MovementView: View {
                     label: "minutes"
                 )
             }
+        }
+    }
+
+    private var heatmapSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Last 90 days")
+                .font(.headline)
+            DailyHeatmap(days: dailyTotals(days: 90), tint: .brandOrange)
+        }
+    }
+
+    /// Total minutes moved per calendar day for the most recent `days` days,
+    /// oldest first, including days with no activity (0 minutes).
+    private func dailyTotals(days: Int) -> [DayTotal] {
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: .now)
+
+        var totals: [Date: Double] = [:]
+        for activity in activities {
+            let day = calendar.startOfDay(for: activity.date)
+            totals[day, default: 0] += activity.durationMinutes
+        }
+
+        return (0..<days).reversed().compactMap { offset in
+            guard let day = calendar.date(byAdding: .day, value: -offset, to: today) else { return nil }
+            return DayTotal(date: day, amount: totals[day] ?? 0)
         }
     }
 
@@ -177,7 +204,7 @@ struct MovementView: View {
         }
         let store = HealthMovementStore()
         await store.requestAuthorization()
-        let since = Calendar.current.date(byAdding: .day, value: -30, to: .now) ?? .now
+        let since = Calendar.current.date(byAdding: .day, value: -90, to: .now) ?? .now
         healthActivities = await store.recentWorkouts(since: since)
         healthNote = nil
         #else
