@@ -58,6 +58,8 @@ struct BriefingView: View {
         }
     }
 
+    @Environment(\.modelContext) private var modelContext
+
     private let timeOfDay = TimeOfDay.current
 
     /// Where the cards currently on screen came from.
@@ -125,9 +127,10 @@ struct BriefingView: View {
         defer { isGenerating = false }
 
         let available = BriefingGenerator.isAvailable
+        let context = BriefingContextBuilder(modelContext: modelContext).build()
         let generator = BriefingGenerator()
         let generated = await withTimeout(seconds: 20) {
-            await generator.generateCards(for: timeOfDay, context: Self.sampleContext)
+            await generator.generateCards(for: timeOfDay, context: context)
         }
         if let generated {
             cards = generated
@@ -174,9 +177,6 @@ struct BriefingView: View {
                 .foregroundStyle(.secondary)
         }
     }
-
-    /// Representative context for generation until real tracker data is wired in.
-    private static let sampleContext = "They've kept it dry today and stayed off THC for two days, and want a lighter evening. They've taken three easy walks this week while a foot injury heals, and their weight is trending down. A storm is keeping them indoors tonight. They mentioned some small friction with their partner Nina this morning."
 }
 
 // MARK: - Placeholder content (replaced by AI generation later)
