@@ -7,6 +7,9 @@
 
 import SwiftUI
 import SwiftData
+#if canImport(UIKit)
+import UIKit
+#endif
 
 /// The app's entry gate: shows the lock screen until `AppLock` is unlocked, then
 /// routes to the check-in or briefing depending on whether the person has
@@ -30,10 +33,34 @@ struct RootView: View {
             }
         }
         .task {
-            // Prompt at first launch (scene-phase changes handle later returns).
+            // Prompt at first launch.
+            if !lock.isUnlocked { lock.authenticate() }
+        }
+        #if canImport(UIKit)
+        // Lock when the app is backgrounded.
+        .task { await lockOnEvent(UIApplication.didEnterBackgroundNotification) }
+        // Lock when the device screen locks (protected data becomes unavailable).
+        .task { await lockOnEvent(UIApplication.protectedDataWillBecomeUnavailableNotification) }
+        // Re-authenticate when the app returns to the foreground.
+        .task { await reauthOnEvent(UIApplication.willEnterForegroundNotification) }
+        #endif
+    }
+
+    #if canImport(UIKit)
+    /// Locks the app each time the given notification is posted.
+    private func lockOnEvent(_ name: Notification.Name) async {
+        for await _ in NotificationCenter.default.notifications(named: name) {
+            lock.lock()
+        }
+    }
+
+    /// Prompts for authentication (when locked) each time the notification posts.
+    private func reauthOnEvent(_ name: Notification.Name) async {
+        for await _ in NotificationCenter.default.notifications(named: name) {
             if !lock.isUnlocked { lock.authenticate() }
         }
     }
+    #endif
 }
 
 /// Shown while the app is locked, with a button to (re)try authentication.
