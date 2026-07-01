@@ -85,7 +85,8 @@ struct SubstanceTrackerView: View {
     private var summarySection: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("This week")
-                .font(.title3.bold())
+                .font(.appTitle3)
+                .foregroundStyle(.secondary)
             HStack(spacing: 12) {
                 statCard(
                     value: "\(Int(thisWeekLogs.reduce(0) { $0 + $1.amount }))",
@@ -99,11 +100,10 @@ struct SubstanceTrackerView: View {
     private func statCard(value: String, label: String) -> some View {
         VStack(spacing: 4) {
             Text(value)
-                .font(.title)
-                .bold()
+                .font(.appLargeTitleSemibold)
                 .foregroundStyle(kind.tint)
             Text(label)
-                .font(.caption)
+                .font(.appCaption)
                 .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity)
@@ -116,7 +116,8 @@ struct SubstanceTrackerView: View {
     private var heatmapSection: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Last 90 days")
-                .font(.title3.bold())
+                .font(.appTitle3)
+                .foregroundStyle(.secondary)
             DailyHeatmap(days: dailyTotals(days: 90), tint: kind.tint)
                 .padding(16)
                 .background(RoundedRectangle(cornerRadius: 16).fill(.white))
@@ -146,24 +147,16 @@ struct SubstanceTrackerView: View {
     private var insightSection: some View {
         VStack(alignment: .leading, spacing: 16) {
             VStack(alignment: .leading, spacing: 6) {
-                HStack(spacing: 8) {
-                    Text("Where you’re at")
-                        .font(.title3.bold())
-                    if isGeneratingInsight {
-                        ProgressView().controlSize(.small)
-                    }
+                if isGeneratingInsight {
+                    ProgressView().controlSize(.small)
                 }
                 Text(condition)
-                    .font(.body)
+                    .font(.appBody)
                     .foregroundStyle(.primary)
             }
-            VStack(alignment: .leading, spacing: 6) {
-                Text("Coaching")
-                    .font(.title3.bold())
-                Text(coaching)
-                    .font(.body)
-                    .foregroundStyle(.primary)
-            }
+            Text(coaching)
+                .font(.appBody)
+                .foregroundStyle(.primary)
         }
     }
 
@@ -173,11 +166,12 @@ struct SubstanceTrackerView: View {
     private var recentSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Recent")
-                .font(.title3.bold())
+                .font(.appTitle3)
+                .foregroundStyle(.secondary)
 
             if logs.isEmpty {
                 Text("No entries yet. Log your first below.")
-                    .font(.subheadline)
+                    .font(.appSubheadline)
                     .foregroundStyle(.secondary)
             } else {
                 ForEach(logs.prefix(20)) { log in
@@ -186,12 +180,11 @@ struct SubstanceTrackerView: View {
                             .foregroundStyle(kind.tint)
                             .frame(width: 28)
                         Text(log.timestamp, format: .dateTime.month().day().hour().minute())
-                            .font(.subheadline)
+                            .font(.appSubheadline)
                             .foregroundStyle(.secondary)
                         Spacer()
                         Text("\(Int(log.amount)) \(kind.unit)")
-                            .font(.subheadline)
-                            .bold()
+                            .font(.appSubheadlineSemibold)
                     }
                     .padding(.vertical, 8)
                     .padding(.horizontal, 12)
@@ -308,7 +301,7 @@ struct SubstanceTrackerView: View {
         }
     }
 
-    private static let placeholderCondition = "Once you’ve logged some entries, a summary of your recent use and trend will appear here."
+    private static let placeholderCondition = "Once you've logged some entries, a summary of your recent use and trend will appear here."
     private static let placeholderCoaching = "Encouraging, personalized coaching will appear here."
 }
 

@@ -11,15 +11,14 @@ struct SettingsView: View {
     var body: some View {
         VStack(spacing: 20) {
             Image(systemName: "gearshape.fill")
-                .font(.largeTitle)
+                .font(.appLargeTitle)
                 .foregroundColor(.brandGreen)
-            
+
             Text("Settings Page")
-                .font(.title)
-                .bold()
-            
+                .font(.appTitle)
+
             Text("Manage your preferences here.")
-                .font(.subheadline)
+                .font(.appSubheadline)
                 .foregroundColor(.secondary)
         }
         .padding()

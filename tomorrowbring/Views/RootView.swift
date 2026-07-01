@@ -71,16 +71,15 @@ private struct LockScreen: View {
     var body: some View {
         VStack(spacing: 20) {
             Image(systemName: "lock.fill")
-                .font(.largeTitle)
+                .font(.appLargeTitle)
                 .foregroundStyle(.brandGreen)
 
             Text("tomorrowbring")
-                .font(.title)
-                .bold()
+                .font(.appTitle)
 
             if let error {
                 Text(error)
-                    .font(.subheadline)
+                    .font(.appSubheadline)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
             }

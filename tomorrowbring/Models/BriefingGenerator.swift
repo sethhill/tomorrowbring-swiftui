@@ -56,7 +56,7 @@ struct GeneratedBriefingCard {
     @Guide(description: "A short, punchy headline of 3 to 6 words")
     var title: String
 
-    @Guide(description: "A warm, encouraging coaching paragraph of 4 to 6 sentences, supportive and specific, never preachy")
+    @Guide(description: "A warm, encouraging coaching paragraph of 3 to 5 sentences, supportive and specific, never preachy")
     var message: String
 }
 

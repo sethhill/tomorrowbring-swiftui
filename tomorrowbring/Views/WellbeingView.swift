@@ -22,8 +22,7 @@ struct WellbeingView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
                 Text("How are you feeling?")
-                    .font(.title2)
-                    .bold()
+                    .font(.appTitle2)
 
                 MetricRatingRow(title: "Calm", icon: "leaf.fill", tint: .brandGreen, value: $calm)
                 MetricRatingRow(title: "Energy", icon: "bolt.fill", tint: .brandOrange, value: $energy)
@@ -44,17 +43,26 @@ struct WellbeingView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .background(Color.appBackground.ignoresSafeArea())
         .navigationTitle("Wellbeing")
+        #if os(iOS)
+        .navigationBarTitleDisplayMode(.inline)
+        #endif
+        .toolbar {
+            ToolbarItem(placement: .principal) {
+                Text("Wellbeing")
+                    .font(.appTitle3)
+            }
+        }
     }
 
     private var recentSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Recent")
-                .font(.title3.bold())
+                .font(.appTitle3)
 
             ForEach(entries.prefix(10)) { entry in
                 HStack {
                     Text(entry.timestamp, format: .dateTime.month().day().hour().minute())
-                        .font(.subheadline)
+                        .font(.appSubheadline)
                         .foregroundStyle(.secondary)
                     Spacer()
                     metricBadge("C", entry.calm, .brandGreen)
@@ -73,7 +81,7 @@ struct WellbeingView: View {
 
     private func metricBadge(_ label: String, _ value: Int, _ tint: Color) -> some View {
         Text("\(label) \(value)")
-            .font(.caption.bold())
+            .font(.appCaptionSemibold)
             .foregroundStyle(tint)
             .padding(.horizontal, 8)
             .padding(.vertical, 4)
@@ -95,7 +103,7 @@ private struct MetricRatingRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             Label(title, systemImage: icon)
-                .font(.title3.bold())
+                .font(.appTitle3)
                 .foregroundStyle(tint)
 
             HStack(spacing: 10) {
@@ -105,7 +113,7 @@ private struct MetricRatingRow: View {
                         .frame(width: 36, height: 36)
                         .overlay(
                             Text("\(rating)")
-                                .font(.subheadline)
+                                .font(.appSubheadline)
                                 .foregroundStyle(rating <= value ? .white : .secondary)
                         )
                         .onTapGesture { value = rating }

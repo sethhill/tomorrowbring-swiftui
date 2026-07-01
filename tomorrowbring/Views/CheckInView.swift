@@ -109,12 +109,11 @@ struct CheckInView: View {
                 .tint(.brandGreen)
 
             Text("Question \(currentIndex + 1) of \(questions.count)")
-                .font(.subheadline)
+                .font(.appSubheadline)
                 .foregroundColor(.secondary)
 
             Text(question.prompt)
-                .font(.title2)
-                .bold()
+                .font(.appTitle2)
                 .multilineTextAlignment(.center)
 
             if question.isOpenEnded {
@@ -168,22 +167,20 @@ struct CheckInView: View {
     private var summaryStep: some View {
         VStack(spacing: 24) {
             Image(systemName: "checkmark.circle.fill")
-                .font(.largeTitle)
+                .font(.appLargeTitle)
                 .foregroundColor(.brandGreen)
 
             Text("All done!")
-                .font(.title)
-                .bold()
+                .font(.appTitle)
 
             VStack(alignment: .leading, spacing: 16) {
                 ForEach(questions) { question in
                     VStack(alignment: .leading, spacing: 4) {
                         Text(question.prompt)
-                            .font(.subheadline)
+                            .font(.appSubheadline)
                             .foregroundColor(.secondary)
                         Text(answerText(for: question))
-                            .font(.body)
-                            .bold()
+                            .font(.appBodySemibold)
                     }
                 }
             }

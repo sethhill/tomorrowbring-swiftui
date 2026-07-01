@@ -55,7 +55,7 @@ struct MovementView: View {
 
                 if let healthNote {
                     Text(healthNote)
-                        .font(.caption)
+                        .font(.appCaption)
                         .foregroundStyle(.secondary)
                 }
 
@@ -73,13 +73,22 @@ struct MovementView: View {
                     .frame(maxWidth: .infinity)
             }
             .buttonStyle(.borderedProminent)
-            .tint(.brandOrange)
+            .tint(.brandGold)
             .controlSize(.large)
             .padding()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .background(Color.appBackground.ignoresSafeArea())
         .navigationTitle("Movement")
+        #if os(iOS)
+        .navigationBarTitleDisplayMode(.inline)
+        #endif
+        .toolbar {
+            ToolbarItem(placement: .principal) {
+                Text("Movement")
+                    .font(.appTitle3)
+            }
+        }
         .sheet(isPresented: $isLogging) {
             LogMovementSheet()
                 .presentationDetents([.medium])
@@ -99,7 +108,8 @@ struct MovementView: View {
     private var summarySection: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("This week")
-                .font(.title3.bold())
+                .font(.appTitle3)
+                .foregroundStyle(.secondary)
             HStack(spacing: 12) {
                 statCard(value: "\(thisWeek.count)", label: "workouts")
                 statCard(
@@ -113,8 +123,9 @@ struct MovementView: View {
     private var heatmapSection: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Last 90 days")
-                .font(.title3.bold())
-            DailyHeatmap(days: dailyTotals(days: 90), tint: .brandOrange)
+                .font(.appTitle3)
+                .foregroundStyle(.secondary)
+            DailyHeatmap(days: dailyTotals(days: 90), tint: .brandGold)
                 .padding(16)
                 .background(RoundedRectangle(cornerRadius: 16).fill(.white))
         }
@@ -123,24 +134,16 @@ struct MovementView: View {
     private var insightSection: some View {
         VStack(alignment: .leading, spacing: 16) {
             VStack(alignment: .leading, spacing: 6) {
-                HStack(spacing: 8) {
-                    Text("Where you’re at")
-                        .font(.title3.bold())
-                    if isGeneratingInsight {
-                        ProgressView().controlSize(.small)
-                    }
+                if isGeneratingInsight {
+                    ProgressView().controlSize(.small)
                 }
                 Text(condition)
-                    .font(.body)
+                    .font(.appBody)
                     .foregroundStyle(.primary)
             }
-            VStack(alignment: .leading, spacing: 6) {
-                Text("Coaching")
-                    .font(.title3.bold())
-                Text(coaching)
-                    .font(.body)
-                    .foregroundStyle(.primary)
-            }
+            Text(coaching)
+                .font(.appBody)
+                .foregroundStyle(.primary)
         }
     }
 
@@ -165,11 +168,10 @@ struct MovementView: View {
     private func statCard(value: String, label: String) -> some View {
         VStack(spacing: 4) {
             Text(value)
-                .font(.title)
-                .bold()
-                .foregroundStyle(.brandOrange)
+                .font(.appLargeTitleSemibold)
+                .foregroundStyle(.brandGold)
             Text(label)
-                .font(.caption)
+                .font(.appCaption)
                 .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity)
@@ -181,11 +183,12 @@ struct MovementView: View {
     private var recentSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Recent")
-                .font(.title3.bold())
+                .font(.appTitle3)
+                .foregroundStyle(.secondary)
 
             if activities.isEmpty {
                 Text("No workouts yet. Log one below, or grant Apple Health access to see your recorded activity.")
-                    .font(.subheadline)
+                    .font(.appSubheadline)
                     .foregroundStyle(.secondary)
             } else {
                 ForEach(activities.prefix(20)) { activity in
@@ -198,15 +201,14 @@ struct MovementView: View {
     private func activityRow(_ activity: MovementActivity) -> some View {
         HStack(spacing: 12) {
             Image(systemName: activity.type.icon)
-                .foregroundStyle(.brandOrange)
+                .foregroundStyle(.brandGold)
                 .frame(width: 28)
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(activity.type.name)
-                    .font(.body)
-                    .bold()
+                    .font(.appBodySemibold)
                 Text(activity.date, format: .dateTime.month().day().hour().minute())
-                    .font(.caption)
+                    .font(.appCaption)
                     .foregroundStyle(.secondary)
             }
 
@@ -214,14 +216,14 @@ struct MovementView: View {
 
             VStack(alignment: .trailing, spacing: 2) {
                 Text("\(Int(activity.durationMinutes)) min")
-                    .font(.subheadline)
+                    .font(.appSubheadline)
                 if let distance = activity.distanceMeters {
                     Text(distanceText(distance))
-                        .font(.caption)
+                        .font(.appCaption)
                         .foregroundStyle(.secondary)
                 }
                 Text(activity.source == .health ? "Health" : "Manual")
-                    .font(.caption2)
+                    .font(.appCaption2)
                     .foregroundStyle(.secondary)
             }
         }
@@ -350,14 +352,14 @@ struct MovementView: View {
     Speak directly to the person as "you".
     """
 
-    private static let placeholderCondition = "Once you’ve recorded some movement, a summary of your recent activity and trend will appear here."
+    private static let placeholderCondition = "Once you've recorded some movement, a summary of your recent activity and trend will appear here."
     private static let placeholderCoaching = "Encouraging, personalized coaching for your movement will appear here."
 
     /// Loads recent workouts from Apple Health when available.
     private func loadHealthWorkouts() async {
         #if canImport(HealthKit)
         guard HealthMovementStore.isAvailable else {
-            healthNote = "Apple Health isn’t available on this device."
+            healthNote = "Apple Health isn't available on this device."
             return
         }
         let store = HealthMovementStore()
@@ -366,7 +368,7 @@ struct MovementView: View {
         healthActivities = await store.recentWorkouts(since: since)
         healthNote = nil
         #else
-        healthNote = "Apple Health isn’t available on this platform — showing manual entries only."
+        healthNote = "Apple Health isn't available on this platform — showing manual entries only."
         #endif
     }
 }

@@ -27,8 +27,8 @@ enum SubstanceKind: String, CaseIterable, Identifiable {
     /// Brand tint used for this substance's charts and accents.
     var tint: Color {
         switch self {
-        case .thc: return .brandGreen
-        case .alcohol: return .brandOrange
+        case .thc: return .brandGold
+        case .alcohol: return .brandGold
         }
     }
 
