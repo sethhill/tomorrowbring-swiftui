@@ -291,10 +291,10 @@ struct MovementView: View {
         }
     }
 
-    /// Builds a short natural-language summary of recent movement for the model.
+    /// Builds a natural-language summary of recent movement for the model.
     private func movementContext() -> String {
         guard !activities.isEmpty else {
-            return "They haven't recorded any workouts yet."
+            return "No workouts logged yet."
         }
         let calendar = Calendar.current
         let now = Date.now
@@ -308,7 +308,7 @@ struct MovementView: View {
 
         let typeCounts = Dictionary(grouping: thisWeekActs, by: { $0.type.name }).mapValues(\.count)
         let typesText = typeCounts.isEmpty
-            ? "no workouts"
+            ? "none"
             : typeCounts.map { "\($0.value) \($0.key)" }.joined(separator: ", ")
 
         let trend: String
@@ -322,7 +322,31 @@ struct MovementView: View {
             trend = "about the same as the previous week"
         }
 
-        return "Over the last 7 days: \(thisWeekActs.count) workouts totaling \(thisMinutes) minutes (\(typesText)), \(trend)."
+        // Days since most recent session (across all time, not just this week)
+        let daysSinceLast: String
+        if let mostRecent = activities.first {
+            let days = calendar.dateComponents(
+                [.day],
+                from: calendar.startOfDay(for: mostRecent.date),
+                to: calendar.startOfDay(for: now)
+            ).day ?? 0
+            daysSinceLast = switch days {
+            case 0: "last session was today"
+            case 1: "last session was yesterday"
+            default: "last session was \(days) days ago"
+            }
+        } else {
+            daysSinceLast = "no sessions recorded"
+        }
+
+        let avgMinutes = thisWeekActs.isEmpty ? 0 : thisMinutes / thisWeekActs.count
+
+        var parts = ["Last 7 days: \(thisWeekActs.count) workouts, \(thisMinutes) min total (\(typesText)), \(trend)."]
+        if !thisWeekActs.isEmpty {
+            parts.append("Average session this week: \(avgMinutes) min.")
+        }
+        parts.append("\(daysSinceLast.prefix(1).uppercased() + daysSinceLast.dropFirst()).")
+        return parts.joined(separator: " ")
     }
 
     private func loadInsightCache() -> CachedInsight? {
@@ -358,14 +382,18 @@ struct MovementView: View {
 
     private static let instructions = """
     You are a direct, warm movement coach. Write in second person ("you") — never first person. \
-    Two paragraphs: first, what the recent movement pattern suggests about where things stand — \
-    translate data to felt momentum or energy, never quote numbers as a report. Second, one specific \
-    realistic action for today. Lead with what to do. Never frame anything as a shortfall or mention \
-    what's missing. If there is nothing constructive to say, keep it brief and forward-looking.
+    Each sentence must introduce a distinct new idea — never repeat a phrase. \
+    First paragraph: what the pattern suggests about momentum and consistency right now. Cover the \
+    trend direction, what the gap since the last session means, and whether the habit is holding or \
+    slipping — translated to felt experience, not quoted numbers. \
+    Second paragraph: one specific action for today. If there has been a gap, frame it as resetting \
+    the clock rather than catching up — a short session ends the gap and that is enough. If the week \
+    is going well, note whether distance or frequency is the better lever to pull. \
+    Never frame anything as a shortfall. Lead with what to do.
     """
 
-    private static let placeholderCondition = "Once you've recorded some movement, a summary of your recent activity and trend will appear here."
-    private static let placeholderCoaching = "Encouraging, personalized coaching for your movement will appear here."
+    private static let placeholderCondition = "Movement tracking gives you more signal the more consistently you log it. Frequency tells you whether the habit is holding; duration tells you whether the effort is growing. The two together give you a trend line, and the trend line is where the useful information lives."
+    private static let placeholderCoaching = "Log your next session when it happens, even if it was short. The first few entries matter most because they give every future session something to compare against. A weekly target works best when it reflects what you can hit most weeks — not what's possible when everything goes right."
 
     /// Loads recent workouts from Apple Health when available.
     private func loadHealthWorkouts() async {

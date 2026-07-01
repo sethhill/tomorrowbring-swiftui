@@ -242,19 +242,34 @@ struct SubstanceTrackerView: View {
     }
 
     private var instructions: String {
-        """
+        let goal = SubstanceGoal.load(for: kind)
+        let goalNote: String
+        switch goal.mode {
+        case .trackingOnly:
+            goalNote = "They are tracking only with no directional goal — be observational, not prescriptive."
+        case .reduction:
+            goalNote = "Their goal is general reduction — focus on trend direction, not a fixed number."
+        case .targeted:
+            goalNote = "Their goal is a targeted weekly limit. When near the limit, use cost-benefit language: what does staying within it make possible? Never use compliance framing."
+        case .elimination:
+            goalNote = "Their goal is total elimination. Acknowledge any progress, address urges directly, and connect staying clean to something they actually care about."
+        }
+        return """
         You are a direct, warm coach. Write in second person ("you") — never first person. \
         Two paragraphs: first, what this \(kind.rawValue) pattern suggests about how things feel \
         right now — translate data to felt experience, never quote numbers back. Second, one concrete \
         thing to do or stay aware of today. Lead with action. Never frame anything as a shortfall \
-        or deficit. If there is nothing meaningful to say, keep it brief and forward-looking.
+        or deficit. \(goalNote)
         """
     }
 
-    /// Builds a short natural-language summary of recent use for the model.
+    /// Builds a natural-language summary of recent use and goal context for the model.
     private func substanceContext() -> String {
+        let goal = SubstanceGoal.load(for: kind)
+        let goalLine = goalContext(goal)
+
         guard !logs.isEmpty else {
-            return "They haven't logged any \(kind.rawValue) use yet."
+            return "\(goalLine) No \(kind.rawValue) use logged yet."
         }
         let calendar = Calendar.current
         let now = Date.now
@@ -278,7 +293,16 @@ struct SubstanceTrackerView: View {
             trend = "about the same as the previous week"
         }
 
-        return "Over the last 7 days they used \(thisTotal) \(kind.unit) of \(kind.rawValue) across \(days) days, \(trend)."
+        var parts = [goalLine, "This week: \(thisTotal) \(kind.unit) across \(days) days, \(trend)."]
+        if goal.mode == .targeted, let limit = goal.weeklyLimit {
+            let remaining = max(0, Int(limit) - thisTotal)
+            parts.append("Limit: \(Int(limit)) \(kind.unit)/week. Remaining: \(remaining) \(kind.unit).")
+        }
+        return parts.joined(separator: " ")
+    }
+
+    private func goalContext(_ goal: SubstanceGoal) -> String {
+        "Goal: \(goal.mode.coachingNote)."
     }
 
     private func loadInsightCache() -> CachedInsight? {

@@ -48,7 +48,9 @@ struct BriefingContextBuilder {
         for kind in SubstanceKind.allCases {
             let thisWeek = total(kind, from: weekAgo, to: now)
             let priorWeek = total(kind, from: twoWeeksAgo, to: weekAgo)
-            guard thisWeek > 0 || priorWeek > 0 else { continue }
+            let goal = SubstanceGoal.load(for: kind)
+
+            guard thisWeek > 0 || priorWeek > 0 || goal.mode != .trackingOnly else { continue }
 
             let trend: String
             if priorWeek == 0 {
@@ -60,7 +62,16 @@ struct BriefingContextBuilder {
             } else {
                 trend = ", about the same as the week before"
             }
-            lines.append("\(kind.rawValue): \(number(thisWeek)) \(kind.unit) over the last 7 days\(trend).")
+
+            var line = "\(kind.rawValue) goal: \(goal.mode.coachingNote)."
+            if thisWeek > 0 || priorWeek > 0 {
+                line += " \(number(thisWeek)) \(kind.unit) this week\(trend)."
+            }
+            if goal.mode == .targeted, let limit = goal.weeklyLimit {
+                let remaining = max(0, Int(limit) - Int(thisWeek))
+                line += " Limit: \(Int(limit)) \(kind.unit)/week, \(remaining) remaining."
+            }
+            lines.append(line)
         }
         return lines.isEmpty ? nil : lines.joined(separator: " ")
     }
