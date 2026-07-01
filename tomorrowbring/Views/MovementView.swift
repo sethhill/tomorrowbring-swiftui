@@ -263,10 +263,10 @@ struct MovementView: View {
         isGeneratingInsight = true
         defer { isGeneratingInsight = false }
 
-        let generator = MovementInsightGenerator()
+        let generator = InsightGenerator()
         let context = movementContext()
         let insight = await withInsightTimeout(seconds: 20) {
-            await generator.generate(context: context)
+            await generator.generate(instructions: Self.instructions, context: context)
         }
         if let insight {
             condition = insight.condition
@@ -312,12 +312,12 @@ struct MovementView: View {
         return "Over the last 7 days: \(thisWeekActs.count) workouts totaling \(thisMinutes) minutes (\(typesText)), \(trend)."
     }
 
-    private func loadInsightCache() -> CachedMovementInsight? {
-        try? JSONDecoder().decode(CachedMovementInsight.self, from: insightCacheData)
+    private func loadInsightCache() -> CachedInsight? {
+        try? JSONDecoder().decode(CachedInsight.self, from: insightCacheData)
     }
 
-    private func saveInsightCache(signature: String, insight: MovementInsight) {
-        let cached = CachedMovementInsight(
+    private func saveInsightCache(signature: String, insight: Insight) {
+        let cached = CachedInsight(
             signature: signature,
             condition: insight.condition,
             coaching: insight.coaching
@@ -329,9 +329,9 @@ struct MovementView: View {
     /// so a slow or wedged model can't leave the insight spinning forever.
     private func withInsightTimeout(
         seconds: Double,
-        operation: @escaping () async -> MovementInsight?
-    ) async -> MovementInsight? {
-        await withTaskGroup(of: MovementInsight?.self) { group in
+        operation: @escaping () async -> Insight?
+    ) async -> Insight? {
+        await withTaskGroup(of: Insight?.self) { group in
             group.addTask { await operation() }
             group.addTask {
                 try? await Task.sleep(for: .seconds(seconds))
@@ -342,6 +342,13 @@ struct MovementView: View {
             return result
         }
     }
+
+    private static let instructions = """
+    You are a warm, encouraging movement coach. Write two short paragraphs about \
+    the person's recent physical activity: first their current condition and trend, \
+    then gentle, specific coaching. Be supportive and concrete, never preachy. \
+    Speak directly to the person as "you".
+    """
 
     private static let placeholderCondition = "Once you’ve recorded some movement, a summary of your recent activity and trend will appear here."
     private static let placeholderCoaching = "Encouraging, personalized coaching for your movement will appear here."
@@ -362,13 +369,6 @@ struct MovementView: View {
         healthNote = "Apple Health isn’t available on this platform — showing manual entries only."
         #endif
     }
-}
-
-/// A Codable snapshot of a generated movement insight, cached by data signature.
-private struct CachedMovementInsight: Codable {
-    var signature: String
-    var condition: String
-    var coaching: String
 }
 
 #Preview {
