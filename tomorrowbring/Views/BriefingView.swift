@@ -93,7 +93,7 @@ struct BriefingView: View {
 
     @Environment(\.modelContext) private var modelContext
 
-    private let timeOfDay = TimeOfDay.current
+    private var timeOfDay: TimeOfDay { .current }
 
     /// Where the cards currently on screen came from.
     enum GenerationStatus {
@@ -254,6 +254,7 @@ struct BriefingView: View {
             HStack(spacing: 10) {
                 Text(timeOfDay.greeting)
                     .font(.appLargeTitleSemibold)
+                    .foregroundStyle(.brandGreen)
                 Image(systemName: timeOfDay.icon)
                     .foregroundStyle(.brandGold)
                 if isGenerating {

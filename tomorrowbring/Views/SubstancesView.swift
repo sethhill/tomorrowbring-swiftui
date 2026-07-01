@@ -15,6 +15,12 @@ struct SubstancesView: View {
 
     var body: some View {
         VStack(spacing: 0) {
+            Text("Substances")
+                .font(.appLargeTitleSemibold)
+                .foregroundStyle(.brandGreen)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal)
+                .padding(.top)
             Picker("Substance", selection: $selectedKind) {
                 ForEach(SubstanceKind.allCases) { kind in
                     Text(kind.rawValue).tag(kind)

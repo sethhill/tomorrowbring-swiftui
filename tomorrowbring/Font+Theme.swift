@@ -12,6 +12,7 @@ extension Font {
     static let appTitle2     = Font.custom("BanterGrotesk-Black", size: 22, relativeTo: .title2)
 
     // MARK: Section headers — BanterGrotesk-Semibold
+    static let appDisplaySemibold     = Font.custom("BanterGrotesk-Semibold", size: 52, relativeTo: .largeTitle)
     static let appLargeTitleSemibold  = Font.custom("BanterGrotesk-Semibold", size: 34, relativeTo: .largeTitle)
     static let appTitle3              = Font.custom("BanterGrotesk-Semibold", size: 20, relativeTo: .title3)
     static let appBodySemibold        = Font.custom("BanterGrotesk-Semibold", size: 17, relativeTo: .body)

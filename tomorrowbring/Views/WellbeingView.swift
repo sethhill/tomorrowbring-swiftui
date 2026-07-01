@@ -21,6 +21,9 @@ struct WellbeingView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
+                Text("Wellbeing")
+                    .font(.appLargeTitleSemibold)
+                    .foregroundStyle(.brandGreen)
                 Text("How are you feeling?")
                     .font(.appTitle2)
 

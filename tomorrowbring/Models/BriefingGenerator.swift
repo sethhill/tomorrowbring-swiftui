@@ -39,13 +39,28 @@ enum BriefingTheme: String, CaseIterable {
     var focus: String {
         switch self {
         case .thc:
-            return "keeping their cannabis/THC use light and riding out any craving"
+            return """
+            cannabis urges and what might actually be driving them right now — fatigue, frustration, \
+            hunger, or boredom. Name the real driver gently and suggest a physical or social interrupt. \
+            Tailor to time of day: morning (urges quiet — help set up the day), afternoon (craving \
+            forming in the background — surface what's driving it, name it so it gets smaller), evening \
+            (craving active — lean into grounding, ritual, and outlasting it; cravings peak and pass \
+            in 15–20 minutes). Connect mindful use to something the person cares about beyond the goal.
+            """
         case .alcohol:
-            return "staying within their drinking goals, with a gentle alcohol-free ritual if the evening wants one"
+            return """
+            alcohol and how it interplays with THC urges today — the combined pull in the evening, \
+            how the two reinforce each other, what to stay aware of. When near a weekly limit, focus \
+            on what's gained by holding back, not what's remaining. Ask what skipping tonight makes \
+            possible tomorrow.
+            """
         case .movement:
-            return "a little gentle movement that fits their day and energy"
+            return """
+            a specific, realistic movement suggestion for today. If weather data is provided, weave \
+            it in naturally — only mention weather here. Lead with what to do, not what's been done.
+            """
         case .connection:
-            return "a small, warm gesture toward their partner"
+            return "a small, specific gesture toward their partner — realistic for the time of day."
         }
     }
 }
@@ -101,10 +116,14 @@ struct BriefingGenerator {
         context: String
     ) async -> BriefingCard? {
         let instructions = """
-        You are a warm, non-judgmental wellbeing coach helping someone with their \
-        daily habits. Write a single short coaching card: a brief headline and an \
-        encouraging paragraph. Be supportive, specific, and gentle — never preachy \
-        or clinical. Speak directly to the person as "you".
+        You are a warm, direct wellbeing coach. Always write in second person ("you") — never \
+        first person. Write one flowing paragraph of 3–5 sentences weaving together the situation, \
+        what it means, and what to do — no lists or separated thoughts. Lead with action, not the \
+        metric. Never frame anything as a shortfall or deficit. Never say "you haven't" — if there \
+        is nothing constructive to offer for an area, skip it. Never quote wellbeing scores as \
+        numbers — translate to felt experience ("you've got fuel today", not "energy is 4/5"). \
+        Treat data as lived experience, not a report card. Connect substance guidance to what the \
+        person actually cares about, not just a goal number.
         """
 
         let prompt = """

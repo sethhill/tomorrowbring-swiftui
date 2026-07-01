@@ -49,6 +49,9 @@ struct MovementView: View {
     var body: some View {
         ScrollView(.vertical) {
             VStack(alignment: .leading, spacing: 24) {
+                Text("Movement")
+                    .font(.appLargeTitleSemibold)
+                    .foregroundStyle(.brandGreen)
                 summarySection
                 heatmapSection
                 insightSection
@@ -87,6 +90,14 @@ struct MovementView: View {
             ToolbarItem(placement: .principal) {
                 Text("Movement")
                     .font(.appTitle3)
+            }
+            ToolbarItem(placement: .primaryAction) {
+                Button {
+                    Task { await loadOrGenerateInsight(forceRefresh: true) }
+                } label: {
+                    Image(systemName: "arrow.clockwise")
+                }
+                .disabled(isGeneratingInsight)
             }
         }
         .sheet(isPresented: $isLogging) {
@@ -168,7 +179,7 @@ struct MovementView: View {
     private func statCard(value: String, label: String) -> some View {
         VStack(spacing: 4) {
             Text(value)
-                .font(.appLargeTitleSemibold)
+                .font(.appDisplaySemibold)
                 .foregroundStyle(.brandGold)
             Text(label)
                 .font(.appCaption)
@@ -252,11 +263,11 @@ struct MovementView: View {
 
     /// Shows the cached insight for the current data, or generates a fresh one
     /// on-device (falling back to placeholder text) and caches it.
-    private func loadOrGenerateInsight() async {
+    private func loadOrGenerateInsight(forceRefresh: Bool = false) async {
         guard !isGeneratingInsight else { return }
         let signature = dataSignature
 
-        if let cached = loadInsightCache(), cached.signature == signature {
+        if !forceRefresh, let cached = loadInsightCache(), cached.signature == signature {
             condition = cached.condition
             coaching = cached.coaching
             return
@@ -346,10 +357,11 @@ struct MovementView: View {
     }
 
     private static let instructions = """
-    You are a warm, encouraging movement coach. Write two short paragraphs about \
-    the person's recent physical activity: first their current condition and trend, \
-    then gentle, specific coaching. Be supportive and concrete, never preachy. \
-    Speak directly to the person as "you".
+    You are a direct, warm movement coach. Write in second person ("you") — never first person. \
+    Two paragraphs: first, what the recent movement pattern suggests about where things stand — \
+    translate data to felt momentum or energy, never quote numbers as a report. Second, one specific \
+    realistic action for today. Lead with what to do. Never frame anything as a shortfall or mention \
+    what's missing. If there is nothing constructive to say, keep it brief and forward-looking.
     """
 
     private static let placeholderCondition = "Once you've recorded some movement, a summary of your recent activity and trend will appear here."

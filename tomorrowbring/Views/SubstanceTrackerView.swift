@@ -69,6 +69,16 @@ struct SubstanceTrackerView: View {
         .onChange(of: logs.count) { _, _ in
             Task { await loadOrGenerateInsight() }
         }
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button {
+                    Task { await loadOrGenerateInsight(forceRefresh: true) }
+                } label: {
+                    Image(systemName: "arrow.clockwise")
+                }
+                .disabled(isGeneratingInsight)
+            }
+        }
     }
 
     // MARK: - This week
@@ -100,7 +110,7 @@ struct SubstanceTrackerView: View {
     private func statCard(value: String, label: String) -> some View {
         VStack(spacing: 4) {
             Text(value)
-                .font(.appLargeTitleSemibold)
+                .font(.appDisplaySemibold)
                 .foregroundStyle(kind.tint)
             Text(label)
                 .font(.appCaption)
@@ -203,11 +213,11 @@ struct SubstanceTrackerView: View {
         return "\(logs.count)|\(Int(latest))"
     }
 
-    private func loadOrGenerateInsight() async {
+    private func loadOrGenerateInsight(forceRefresh: Bool = false) async {
         guard !isGeneratingInsight else { return }
         let signature = dataSignature
 
-        if let cached = loadInsightCache(), cached.signature == signature {
+        if !forceRefresh, let cached = loadInsightCache(), cached.signature == signature {
             condition = cached.condition
             coaching = cached.coaching
             return
@@ -233,10 +243,11 @@ struct SubstanceTrackerView: View {
 
     private var instructions: String {
         """
-        You are a warm, non-judgmental coach helping someone who is mindful of their \(kind.rawValue) \
-        use. Write two short paragraphs: first their current condition and recent trend, then gentle, \
-        specific coaching. Supportive and concrete, never preachy or clinical. Speak directly to the \
-        person as "you".
+        You are a direct, warm coach. Write in second person ("you") — never first person. \
+        Two paragraphs: first, what this \(kind.rawValue) pattern suggests about how things feel \
+        right now — translate data to felt experience, never quote numbers back. Second, one concrete \
+        thing to do or stay aware of today. Lead with action. Never frame anything as a shortfall \
+        or deficit. If there is nothing meaningful to say, keep it brief and forward-looking.
         """
     }
 

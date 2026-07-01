@@ -69,28 +69,28 @@ private struct LockScreen: View {
     let onUnlock: () -> Void
 
     var body: some View {
-        VStack(spacing: 20) {
-            Image(systemName: "lock.fill")
-                .font(.appLargeTitle)
-                .foregroundStyle(.brandGreen)
+        ZStack(alignment: .bottom) {
+            Image("appSplash")
+                .resizable()
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .ignoresSafeArea()
 
-            Text("tomorrowbring")
-                .font(.appTitle)
+            VStack(spacing: 12) {
+                if let error {
+                    Text(error)
+                        .font(.appSubheadline)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                }
 
-            if let error {
-                Text(error)
-                    .font(.appSubheadline)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
+                Button("Unlock", action: onUnlock)
+                    .buttonStyle(.borderedProminent)
+                    .tint(Color.appBackground)
+                    .foregroundStyle(.black)
+                    .controlSize(.large)
+                    .frame(maxWidth: .infinity)
             }
-
-            Button("Unlock", action: onUnlock)
-                .buttonStyle(.borderedProminent)
-                .tint(.brandGreen)
-                .controlSize(.large)
+            .padding()
         }
-        .padding()
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color.appBackground.ignoresSafeArea())
     }
 }

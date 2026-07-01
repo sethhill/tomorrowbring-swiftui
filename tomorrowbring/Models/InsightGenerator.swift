@@ -11,10 +11,10 @@ import FoundationModels
 /// Two short paragraphs: the person's current condition, and encouraging coaching.
 @Generable
 struct Insight {
-    @Guide(description: "One paragraph of 3 to 5 sentences describing the person's current condition and recent trend. Warm and factual.")
+    @Guide(description: "One paragraph of 3 to 5 sentences about what the pattern suggests and how things feel right now. Second person. Translate data to felt experience — never quote numbers or scores back. Never frame as a shortfall.")
     var condition: String
 
-    @Guide(description: "One paragraph of 3 to 5 sentences of encouraging, specific coaching. Supportive and concrete, never preachy.")
+    @Guide(description: "One paragraph of 3 to 5 sentences of specific, action-first coaching. Lead with what to do. Second person. Never frame as a deficit or mention what's missing.")
     var coaching: String
 }
 
