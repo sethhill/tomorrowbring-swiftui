@@ -62,7 +62,12 @@ struct ContentView: View {
         case .wellbeing: WellbeingView()
         case .movement: MovementView()
         case .substances: SubstancesView()
-        case .checkIn: CheckInView(onComplete: { selection = .briefing })
+        case .checkIn:
+            CheckInView(onComplete: {
+                // Regenerate the briefing so it reflects the just-completed check-in.
+                BriefingView.invalidateCache()
+                selection = .briefing
+            })
         case .settings: SettingsView()
         }
     }

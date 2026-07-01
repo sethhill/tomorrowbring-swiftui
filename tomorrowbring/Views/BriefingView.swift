@@ -14,6 +14,39 @@ struct BriefingCard: Identifiable {
     let message: String
     let icon: String
     let tint: Color
+    /// The theme this card was generated for, when applicable (used for caching).
+    var theme: BriefingTheme? = nil
+}
+
+/// A Codable snapshot of a generated briefing, cached per time-of-day slot so it
+/// regenerates at most a few times a day rather than on every launch.
+private struct CachedBriefing: Codable {
+    var slotKey: String
+    var cards: [CachedCard]
+}
+
+private struct CachedCard: Codable {
+    var title: String
+    var message: String
+    var themeRaw: String
+
+    init(_ card: BriefingCard) {
+        title = card.title
+        message = card.message
+        themeRaw = (card.theme ?? .thc).rawValue
+    }
+
+    /// Rebuilds a display card, restoring its icon and tint from the theme.
+    var card: BriefingCard {
+        let theme = BriefingTheme(rawValue: themeRaw) ?? .thc
+        return BriefingCard(
+            title: title,
+            message: message,
+            icon: theme.icon,
+            tint: theme.tint,
+            theme: theme
+        )
+    }
 }
 
 /// AI-generated summary of the current state of things plus coaching suggestions
@@ -85,6 +118,25 @@ struct BriefingView: View {
     @State private var isGenerating = false
     @State private var status: GenerationStatus = .idle
 
+    /// The most recently generated briefing, persisted so it isn't regenerated
+    /// on every launch within the same time-of-day slot.
+    @AppStorage(BriefingView.cacheKey) private var cacheData = Data()
+
+    private static let cacheKey = "briefingCache"
+
+    /// Clears the cached briefing so the next appearance regenerates it (e.g.
+    /// after a check-in, so the new answers are reflected).
+    static func invalidateCache() {
+        UserDefaults.standard.removeObject(forKey: cacheKey)
+    }
+
+    /// Identifies the current day + time-of-day slot (morning/afternoon/evening),
+    /// so generation happens at most once per slot (up to three times a day).
+    private var currentSlotKey: String {
+        let parts = Calendar.current.dateComponents([.year, .month, .day], from: .now)
+        return "\(parts.year ?? 0)-\(parts.month ?? 0)-\(parts.day ?? 0)-\(timeOfDay.promptName)"
+    }
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
@@ -107,7 +159,7 @@ struct BriefingView: View {
         .navigationTitle("Briefing")
         .toolbar {
             Button {
-                Task { await generate() }
+                Task { await generate(forceRefresh: true) }
             } label: {
                 Image(systemName: "arrow.clockwise")
             }
@@ -119,10 +171,22 @@ struct BriefingView: View {
         }
     }
 
-    /// Generates fresh cards on-device, falling back to placeholder content if
-    /// the model is unavailable or declines.
-    private func generate() async {
+    /// Shows the cached briefing for the current slot when available; otherwise
+    /// generates on-device (falling back to placeholder content), caching any
+    /// generated result. `forceRefresh` regenerates and replaces the cache.
+    private func generate(forceRefresh: Bool = false) async {
         guard !isGenerating else { return }
+
+        // Reuse this slot's cached briefing unless the user asked to refresh.
+        if !forceRefresh,
+           let cached = loadCache(),
+           cached.slotKey == currentSlotKey,
+           !cached.cards.isEmpty {
+            cards = cached.cards.map(\.card)
+            status = .onDevice
+            return
+        }
+
         isGenerating = true
         defer { isGenerating = false }
 
@@ -135,10 +199,20 @@ struct BriefingView: View {
         if let generated {
             cards = generated
             status = .onDevice
+            saveCache(generated)
         } else {
             cards = BriefingView.cards(for: timeOfDay)
             status = available ? .fellBackDeclined : .fellBackUnavailable
         }
+    }
+
+    private func loadCache() -> CachedBriefing? {
+        try? JSONDecoder().decode(CachedBriefing.self, from: cacheData)
+    }
+
+    private func saveCache(_ cards: [BriefingCard]) {
+        let cached = CachedBriefing(slotKey: currentSlotKey, cards: cards.map(CachedCard.init))
+        cacheData = (try? JSONEncoder().encode(cached)) ?? Data()
     }
 
     /// Runs `operation`, returning `nil` if it doesn't finish within `seconds`

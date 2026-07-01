@@ -11,7 +11,7 @@ import FoundationModels
 
 /// A coaching theme the briefing covers, carrying its presentation details and
 /// the seed used to prompt the on-device model.
-enum BriefingTheme: CaseIterable {
+enum BriefingTheme: String, CaseIterable {
     case thc
     case alcohol
     case movement
@@ -123,7 +123,8 @@ struct BriefingGenerator {
                 title: response.content.title,
                 message: response.content.message,
                 icon: theme.icon,
-                tint: theme.tint
+                tint: theme.tint,
+                theme: theme
             )
         } catch {
             // Unavailable, declined by guardrails, context-window, etc.
