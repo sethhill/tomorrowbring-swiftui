@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import SwiftData
 
 /// A single predetermined answer: a label and an optional leading emoji.
 ///
@@ -57,6 +58,8 @@ struct CheckInView: View {
     /// The questions to ask, in order. Replace or extend with your own content.
     let questions: [CheckInQuestion]
 
+    @Environment(\.modelContext) private var modelContext
+
     /// Index of the question currently being shown.
     @State private var currentIndex = 0
 
@@ -79,6 +82,12 @@ struct CheckInView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .background(Color.appBackground.ignoresSafeArea())
         .animation(.easeInOut, value: currentIndex)
+        .onChange(of: currentIndex) { _, newValue in
+            // Save once the flow reaches the summary (all questions answered).
+            if newValue == questions.count {
+                saveCheckIn()
+            }
+        }
     }
 
     // MARK: - Steps
@@ -210,6 +219,17 @@ struct CheckInView: View {
     private func restart() {
         responses.removeAll()
         currentIndex = 0
+    }
+
+    /// Persists the completed check-in, skipping any unanswered (e.g. optional) questions.
+    private func saveCheckIn() {
+        let records = questions.compactMap { question -> CheckInResponse? in
+            let answer = responses[question.id]?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            guard !answer.isEmpty else { return nil }
+            return CheckInResponse(prompt: question.prompt, answer: answer)
+        }
+        guard !records.isEmpty else { return }
+        modelContext.insert(CheckInEntry(responses: records))
     }
 }
 

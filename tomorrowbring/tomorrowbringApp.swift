@@ -15,6 +15,6 @@ struct tomorrowbringApp: App {
             ContentView()
                 .background(Color.appBackground.ignoresSafeArea())
         }
-        .modelContainer(for: SubstanceLog.self)
+        .modelContainer(for: [SubstanceLog.self, CheckInEntry.self, WellbeingEntry.self])
     }
 }
