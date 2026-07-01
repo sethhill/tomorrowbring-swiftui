@@ -47,16 +47,55 @@ struct BriefingView: View {
             case .evening: return "moon.stars.fill"
             }
         }
+
+        /// Lowercase name used inside generation prompts.
+        var promptName: String {
+            switch self {
+            case .morning: return "morning"
+            case .afternoon: return "afternoon"
+            case .evening: return "evening"
+            }
+        }
     }
 
     private let timeOfDay = TimeOfDay.current
+
+    /// Where the cards currently on screen came from.
+    enum GenerationStatus {
+        case idle
+        case onDevice
+        case fellBackUnavailable
+        case fellBackDeclined
+
+        var note: String? {
+            switch self {
+            case .idle: return nil
+            case .onDevice: return "Generated on-device with Apple Intelligence."
+            case .fellBackUnavailable: return "Showing sample content — Apple Intelligence is unavailable on this device."
+            case .fellBackDeclined: return "Showing sample content — the on-device model declined to generate."
+            }
+        }
+    }
+
+    /// The cards currently shown. Starts with placeholder content, then is
+    /// replaced by on-device generated cards when available.
+    @State private var cards: [BriefingCard] = []
+    @State private var isGenerating = false
+    @State private var status: GenerationStatus = .idle
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
                 header
-                ForEach(BriefingView.cards(for: timeOfDay)) { card in
+                ForEach(cards) { card in
                     BriefingCardView(card: card)
+                }
+                if let note = status.note {
+                    Text(note)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .frame(maxWidth: .infinity, alignment: .center)
+                        .padding(.top, 4)
                 }
             }
             .padding()
@@ -64,6 +103,57 @@ struct BriefingView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color.appBackground.ignoresSafeArea())
         .navigationTitle("Briefing")
+        .toolbar {
+            Button {
+                Task { await generate() }
+            } label: {
+                Image(systemName: "arrow.clockwise")
+            }
+            .disabled(isGenerating)
+        }
+        .task {
+            if cards.isEmpty { cards = BriefingView.cards(for: timeOfDay) }
+            await generate()
+        }
+    }
+
+    /// Generates fresh cards on-device, falling back to placeholder content if
+    /// the model is unavailable or declines.
+    private func generate() async {
+        guard !isGenerating else { return }
+        isGenerating = true
+        defer { isGenerating = false }
+
+        let available = BriefingGenerator.isAvailable
+        let generator = BriefingGenerator()
+        let generated = await withTimeout(seconds: 20) {
+            await generator.generateCards(for: timeOfDay, context: Self.sampleContext)
+        }
+        if let generated {
+            cards = generated
+            status = .onDevice
+        } else {
+            cards = BriefingView.cards(for: timeOfDay)
+            status = available ? .fellBackDeclined : .fellBackUnavailable
+        }
+    }
+
+    /// Runs `operation`, returning `nil` if it doesn't finish within `seconds`
+    /// so a slow or wedged model can't leave the UI spinning indefinitely.
+    private func withTimeout(
+        seconds: Double,
+        operation: @escaping () async -> [BriefingCard]?
+    ) async -> [BriefingCard]? {
+        await withTaskGroup(of: [BriefingCard]?.self) { group in
+            group.addTask { await operation() }
+            group.addTask {
+                try? await Task.sleep(for: .seconds(seconds))
+                return nil
+            }
+            let result = await group.next() ?? nil
+            group.cancelAll()
+            return result
+        }
     }
 
     private var header: some View {
@@ -74,12 +164,19 @@ struct BriefingView: View {
                 Text(timeOfDay.greeting)
                     .font(.largeTitle)
                     .bold()
+                if isGenerating {
+                    ProgressView()
+                        .controlSize(.small)
+                }
             }
             Text(Date.now, format: .dateTime.weekday(.wide).month().day())
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
         }
     }
+
+    /// Representative context for generation until real tracker data is wired in.
+    private static let sampleContext = "They've kept it dry today and stayed off THC for two days, and want a lighter evening. They've taken three easy walks this week while a foot injury heals, and their weight is trending down. A storm is keeping them indoors tonight. They mentioned some small friction with their partner Nina this morning."
 }
 
 // MARK: - Placeholder content (replaced by AI generation later)
