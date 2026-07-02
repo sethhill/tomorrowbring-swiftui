@@ -8,10 +8,11 @@
 import SwiftUI
 import SwiftData
 
-/// Tracker for substances. A segmented control switches between the THC and
-/// Alcohol trackers, each shown by `SubstanceTrackerView`.
+/// Tracker for substances. A custom glass pill control switches between the THC
+/// and Alcohol trackers, each shown by `SubstanceTrackerView`.
 struct SubstancesView: View {
     @State private var selectedKind: SubstanceKind = .thc
+    @Namespace private var pickerNamespace
 
     var body: some View {
         VStack(spacing: 0) {
@@ -21,13 +22,10 @@ struct SubstancesView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal)
                 .padding(.top)
-            Picker("Substance", selection: $selectedKind) {
-                ForEach(SubstanceKind.allCases) { kind in
-                    Text(kind.rawValue).tag(kind)
-                }
-            }
-            .pickerStyle(.segmented)
-            .padding()
+
+            substancePicker
+                .padding(.horizontal)
+                .padding(.vertical, 8)
 
             SubstanceTrackerView(kind: selectedKind)
                 // Rebuild the tracker (and its @Query) when the substance changes.
@@ -39,6 +37,34 @@ struct SubstancesView: View {
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif
+    }
+
+    private var substancePicker: some View {
+        HStack(spacing: 4) {
+            ForEach(SubstanceKind.allCases) { kind in
+                Button {
+                    withAnimation(.spring(duration: 0.22)) {
+                        selectedKind = kind
+                    }
+                } label: {
+                    Text(kind.rawValue)
+                        .font(.appBodySemibold)
+                        .foregroundStyle(selectedKind == kind ? .primary : .secondary)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 12)
+                        .background {
+                            if selectedKind == kind {
+                                Capsule()
+                                    .fill(.white)
+                                    .matchedGeometryEffect(id: "selectedPill", in: pickerNamespace)
+                            }
+                        }
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(4)
+        .glassEffect(.regular, in: .capsule)
     }
 }
 
