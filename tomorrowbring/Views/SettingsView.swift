@@ -15,6 +15,7 @@ struct SettingsView: View {
                     .font(.appLargeTitleSemibold)
                     .foregroundStyle(.brandGreen)
 
+                movementGoalSection
                 substanceGoalsSection
             }
             .padding()
@@ -33,6 +34,16 @@ struct SettingsView: View {
         }
     }
 
+    private var movementGoalSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Movement goal")
+                .font(.appTitle3)
+                .foregroundStyle(.secondary)
+
+            MovementGoalCard()
+        }
+    }
+
     private var substanceGoalsSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Substance goals")
@@ -46,7 +57,62 @@ struct SettingsView: View {
     }
 }
 
-// MARK: - Goal card
+// MARK: - Movement goal card
+
+private struct MovementGoalCard: View {
+    @State private var goal: MovementGoal = MovementGoal.load()
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack(spacing: 8) {
+                Image(systemName: "figure.walk")
+                    .foregroundStyle(.brandGold)
+                Text("Movement")
+                    .font(.appBodySemibold)
+            }
+
+            Picker("Goal", selection: $goal.mode) {
+                ForEach(MovementGoalMode.allCases) { mode in
+                    Text(mode.rawValue).tag(mode)
+                }
+            }
+            .pickerStyle(.menu)
+            .tint(.primary)
+            .frame(maxWidth: .infinity, alignment: .leading)
+
+            if goal.mode == .targeted {
+                Divider()
+                HStack {
+                    Text("Weekly sessions")
+                        .font(.appSubheadline)
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                    Stepper(
+                        "\(goal.weeklySessionTarget ?? 3) sessions",
+                        value: Binding(
+                            get: { goal.weeklySessionTarget ?? 3 },
+                            set: { goal.weeklySessionTarget = $0 }
+                        ),
+                        in: 1...14,
+                        step: 1
+                    )
+                    .font(.appSubheadline)
+                }
+            }
+
+            Text(goal.mode.detail)
+                .font(.appCaption)
+                .foregroundStyle(.secondary)
+        }
+        .padding()
+        .background(RoundedRectangle(cornerRadius: 16).fill(.white))
+        .onChange(of: goal) { _, newGoal in
+            newGoal.save()
+        }
+    }
+}
+
+// MARK: - Substance goal card
 
 private struct SubstanceGoalCard: View {
     let kind: SubstanceKind

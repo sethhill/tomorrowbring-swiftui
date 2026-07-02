@@ -279,7 +279,7 @@ struct MovementView: View {
         let generator = InsightGenerator()
         let context = movementContext()
         let insight = await withInsightTimeout(seconds: 20) {
-            await generator.generate(instructions: Self.instructions, context: context)
+            await generator.generate(instructions: instructions, context: context)
         }
         if let insight {
             condition = insight.condition
@@ -291,10 +291,13 @@ struct MovementView: View {
         }
     }
 
-    /// Builds a natural-language summary of recent movement for the model.
+    /// Builds a natural-language summary of recent movement and goal context for the model.
     private func movementContext() -> String {
+        let goal = MovementGoal.load()
+        let goalLine = "Goal: \(goal.mode.coachingNote)."
+
         guard !activities.isEmpty else {
-            return "No workouts logged yet."
+            return "\(goalLine) No workouts logged yet."
         }
         let calendar = Calendar.current
         let now = Date.now
@@ -341,11 +344,15 @@ struct MovementView: View {
 
         let avgMinutes = thisWeekActs.isEmpty ? 0 : thisMinutes / thisWeekActs.count
 
-        var parts = ["Last 7 days: \(thisWeekActs.count) workouts, \(thisMinutes) min total (\(typesText)), \(trend)."]
+        var parts = [goalLine, "Last 7 days: \(thisWeekActs.count) workouts, \(thisMinutes) min total (\(typesText)), \(trend)."]
         if !thisWeekActs.isEmpty {
             parts.append("Average session this week: \(avgMinutes) min.")
         }
         parts.append("\(daysSinceLast.prefix(1).uppercased() + daysSinceLast.dropFirst()).")
+        if goal.mode == .targeted, let target = goal.weeklySessionTarget {
+            let remaining = max(0, target - thisWeekActs.count)
+            parts.append("Target: \(target) sessions/week. Remaining this week: \(remaining).")
+        }
         return parts.joined(separator: " ")
     }
 
@@ -380,17 +387,30 @@ struct MovementView: View {
         }
     }
 
-    private static let instructions = """
-    VOICE RULE: Never use first person. Never write "I", "I'm", "I've", or "we". \
-    You have no voice of your own. Address the reader as "you" only, always. \
-    You are a direct movement coach. Each sentence must introduce a distinct new idea — never repeat. \
-    First paragraph: what the pattern suggests about momentum and consistency right now — trend \
-    direction, what the gap since the last session means, whether the habit is holding or slipping. \
-    Translate to felt experience, never quote numbers. \
-    Second paragraph: one specific action for today. If there has been a gap, frame it as resetting \
-    the clock — a short session ends the gap and that is enough. If the week is going well, note \
-    whether distance or frequency is the better lever. Never frame anything as a shortfall.
-    """
+    private var instructions: String {
+        let goal = MovementGoal.load()
+        let goalNote: String
+        switch goal.mode {
+        case .trackingOnly:
+            goalNote = "They are tracking only with no directional goal — be observational, not prescriptive."
+        case .increase:
+            goalNote = "Their goal is general increase — focus on upward trend and building consistency over time."
+        case .targeted:
+            goalNote = "Their goal is a targeted weekly session count. When near the target, encourage completing it with a specific plan. When at or past it, acknowledge the achievement and note whether adding duration or protecting recovery is the smarter next move."
+        }
+        return """
+        VOICE RULE: Never use first person. Never write "I", "I'm", "I've", or "we". \
+        You have no voice of your own. Address the reader as "you" only, always. \
+        You are a direct movement coach. Each sentence must introduce a distinct new idea — never repeat. \
+        First paragraph: what the pattern suggests about momentum and consistency right now — trend \
+        direction, what the gap since the last session means, whether the habit is holding or slipping. \
+        Translate to felt experience, never quote numbers. \
+        Second paragraph: one specific action for today. If there has been a gap, frame it as resetting \
+        the clock — a short session ends the gap and that is enough. If the week is going well, note \
+        whether duration or frequency is the better lever. Never frame anything as a shortfall. \
+        \(goalNote)
+        """
+    }
 
     private static let placeholderCondition = "Movement tracking gives you more signal the more consistently you log it. Frequency tells you whether the habit is holding; duration tells you whether the effort is growing. The two together give you a trend line, and the trend line is where the useful information lives."
     private static let placeholderCoaching = "Log your next session when it happens, even if it was short. The first few entries matter most because they give every future session something to compare against. A weekly target works best when it reflects what you can hit most weeks — not what's possible when everything goes right."

@@ -7,42 +7,33 @@
 
 import SwiftUI
 import SwiftData
+import Charts
 
-/// General mood tracker across three metrics: calm, energy, and mood. Ratings
-/// are logged (1–5) and persisted, with recent entries listed below.
+/// Wellbeing readout driven by the latest check-in. Shows a 7-day trend
+/// across energy, calm, and mood, plus an AI condition and coaching paragraph.
 struct WellbeingView: View {
-    @Environment(\.modelContext) private var modelContext
-    @Query(sort: \WellbeingEntry.timestamp, order: .reverse) private var entries: [WellbeingEntry]
+    @Query(sort: \CheckInEntry.timestamp, order: .reverse) private var checkIns: [CheckInEntry]
 
-    @State private var calm = 3
-    @State private var energy = 3
-    @State private var mood = 3
+    @State private var condition = WellbeingView.placeholderCondition
+    @State private var coaching = WellbeingView.placeholderCoaching
+    @State private var isGeneratingInsight = false
+
+    @AppStorage("wellbeingInsightCache") private var insightCacheData = Data()
 
     var body: some View {
-        ScrollView {
+        ScrollView(.vertical) {
             VStack(alignment: .leading, spacing: 24) {
                 Text("Wellbeing")
                     .font(.appLargeTitleSemibold)
                     .foregroundStyle(.brandGreen)
-                Text("How are you feeling?")
-                    .font(.appTitle2)
 
-                MetricRatingRow(title: "Calm", icon: "leaf.fill", tint: .brandGreen, value: $calm)
-                MetricRatingRow(title: "Energy", icon: "bolt.fill", tint: .brandOrange, value: $energy)
-                MetricRatingRow(title: "Mood", icon: "face.smiling.fill", tint: .brandGold, value: $mood)
-
-                Button("Save entry", action: save)
-                    .buttonStyle(.borderedProminent)
-                    .tint(.brandGreen)
-                    .controlSize(.large)
-                    .frame(maxWidth: .infinity)
-
-                if !entries.isEmpty {
-                    recentSection
-                }
+                trendSection
+                insightSection
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
             .padding()
         }
+        .scrollBounceBehavior(.basedOnSize, axes: [.horizontal])
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .background(Color.appBackground.ignoresSafeArea())
         .navigationTitle("Wellbeing")
@@ -54,75 +45,314 @@ struct WellbeingView: View {
                 Text("Wellbeing")
                     .font(.appTitle3)
             }
-        }
-    }
-
-    private var recentSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Recent")
-                .font(.appTitle3)
-
-            ForEach(entries.prefix(10)) { entry in
-                HStack {
-                    Text(entry.timestamp, format: .dateTime.month().day().hour().minute())
-                        .font(.appSubheadline)
-                        .foregroundStyle(.secondary)
-                    Spacer()
-                    metricBadge("C", entry.calm, .brandGreen)
-                    metricBadge("E", entry.energy, .brandOrange)
-                    metricBadge("M", entry.mood, .brandGold)
+            ToolbarItem(placement: .primaryAction) {
+                Button {
+                    Task { await loadOrGenerateInsight(forceRefresh: true) }
+                } label: {
+                    Image(systemName: "arrow.clockwise")
                 }
-                .padding(.vertical, 8)
-                .padding(.horizontal, 12)
-                .background(
-                    RoundedRectangle(cornerRadius: 12)
-                        .fill(.white)
-                )
+                .disabled(isGeneratingInsight)
             }
         }
+        // Re-fires when checkIns loads or changes, fixing the SwiftData timing issue.
+        .task(id: dataSignature) { await loadOrGenerateInsight() }
     }
 
-    private func metricBadge(_ label: String, _ value: Int, _ tint: Color) -> some View {
-        Text("\(label) \(value)")
-            .font(.appCaptionSemibold)
-            .foregroundStyle(tint)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
-            .background(tint.opacity(0.15), in: Capsule())
+    // MARK: - Trend chart
+
+    private var trendSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Last 7 days")
+                .font(.appTitle3)
+                .foregroundStyle(.secondary)
+            WellbeingTrendChart(points: wellbeingPoints)
+        }
     }
 
-    private func save() {
-        modelContext.insert(WellbeingEntry(calm: calm, energy: energy, mood: mood))
+    /// Parses the last 7 days of check-ins into normalised (0–1) data points.
+    /// When multiple check-ins exist for a day, the latest one wins.
+    private var wellbeingPoints: [WellbeingDataPoint] {
+        let calendar = Calendar.current
+        let sevenDaysAgo = calendar.date(
+            byAdding: .day, value: -6,
+            to: calendar.startOfDay(for: .now)
+        ) ?? .now
+        let recent = checkIns.filter { $0.timestamp >= sevenDaysAgo }
+
+        var byDay: [Date: CheckInEntry] = [:]
+        for entry in recent.reversed() {
+            let day = calendar.startOfDay(for: entry.timestamp)
+            byDay[day] = entry
+        }
+
+        var points: [WellbeingDataPoint] = []
+        for (day, entry) in byDay {
+            for response in entry.responses {
+                let p = response.prompt.lowercased()
+                if p.contains("your energy") {
+                    if let v = energyValue(response.answer) {
+                        points.append(WellbeingDataPoint(date: day, metric: .energy, value: v))
+                    }
+                } else if p.contains("stress level") {
+                    // Invert stress → calm
+                    if let v = calmValue(response.answer) {
+                        points.append(WellbeingDataPoint(date: day, metric: .calm, value: v))
+                    }
+                } else if p.contains("overall mood") {
+                    if let v = moodValue(response.answer) {
+                        points.append(WellbeingDataPoint(date: day, metric: .mood, value: v))
+                    }
+                }
+            }
+        }
+        return points.sorted { $0.date < $1.date }
+    }
+
+    private func energyValue(_ answer: String) -> Double? {
+        switch answer {
+        case "Great":   return 1.0
+        case "Good":    return 0.75
+        case "Okay":    return 0.5
+        case "Low":     return 0.25
+        case "Drained": return 0.0
+        default:        return nil
+        }
+    }
+
+    private func calmValue(_ answer: String) -> Double? {
+        switch answer {
+        case "Chill":        return 1.0
+        case "A bit":        return 0.67
+        case "Stressed":     return 0.33
+        case "Overwhelmed":  return 0.0
+        default:             return nil
+        }
+    }
+
+    private func moodValue(_ answer: String) -> Double? {
+        switch answer {
+        case "Good":    return 1.0
+        case "Decent":  return 0.67
+        case "Mixed":   return 0.33
+        case "Low":     return 0.0
+        default:        return nil
+        }
+    }
+
+    // MARK: - Insight section
+
+    private var insightSection: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            VStack(alignment: .leading, spacing: 6) {
+                if isGeneratingInsight {
+                    ProgressView().controlSize(.small)
+                }
+                Text(condition)
+                    .font(.appBody)
+                    .foregroundStyle(.primary)
+            }
+            Text(coaching)
+                .font(.appBody)
+                .foregroundStyle(.primary)
+        }
+    }
+
+    // MARK: - Insight generation
+
+    private var dataSignature: String {
+        guard let latest = checkIns.first else { return "none" }
+        return "\(Int(latest.timestamp.timeIntervalSince1970))"
+    }
+
+    private func loadOrGenerateInsight(forceRefresh: Bool = false) async {
+        guard !isGeneratingInsight else { return }
+        let signature = dataSignature
+
+        if !forceRefresh, let cached = loadInsightCache(), cached.signature == signature {
+            condition = cached.condition
+            coaching = cached.coaching
+            return
+        }
+
+        isGeneratingInsight = true
+        defer { isGeneratingInsight = false }
+
+        let generator = InsightGenerator()
+        let context = wellbeingContext()
+        let insight = await withInsightTimeout(seconds: 20) {
+            await generator.generate(instructions: instructions, context: context)
+        }
+        if let insight {
+            condition = insight.condition
+            coaching = insight.coaching
+            saveInsightCache(signature: signature, insight: insight)
+        } else {
+            condition = Self.placeholderCondition
+            coaching = Self.placeholderCoaching
+        }
+    }
+
+    private var instructions: String {
+        """
+        VOICE RULE: Never use first person. Never write "I", "I'm", "I've", or "we". \
+        You have no voice of your own. Address the reader as "you" only, always. \
+        You are a direct wellbeing coach. Draw on the check-in responses provided. \
+        First paragraph: what the check-in picture suggests about how things feel right now. \
+        Weave energy, stress, mood, and sleep into a coherent felt experience — do not list them. \
+        Never quote the raw answers back word for word. Translate to what they mean for how the day feels. \
+        Never frame anything as a shortfall or deficit. Each sentence must introduce a distinct new idea. \
+        Second paragraph: one concrete thing to do or stay aware of today, grounded in what the check-in revealed. \
+        Lead with action. Connect to what is actually driving the person's state. \
+        Each sentence must introduce a distinct new idea — never repeat.
+        """
+    }
+
+    private func wellbeingContext() -> String {
+        guard let latest = checkIns.first else {
+            return "No check-in data available yet."
+        }
+        let calendar = Calendar.current
+        let daysAgo = calendar.dateComponents(
+            [.day],
+            from: calendar.startOfDay(for: latest.timestamp),
+            to: calendar.startOfDay(for: .now)
+        ).day ?? 0
+        let when = switch daysAgo {
+        case 0: "today"
+        case 1: "yesterday"
+        default: "\(daysAgo) days ago"
+        }
+        let answers = latest.responses.map { "\($0.prompt) \($0.answer)." }.joined(separator: " ")
+        return "Check-in (\(when)): \(answers)"
+    }
+
+    private func loadInsightCache() -> CachedInsight? {
+        try? JSONDecoder().decode(CachedInsight.self, from: insightCacheData)
+    }
+
+    private func saveInsightCache(signature: String, insight: Insight) {
+        let cached = CachedInsight(
+            signature: signature,
+            condition: insight.condition,
+            coaching: insight.coaching
+        )
+        insightCacheData = (try? JSONEncoder().encode(cached)) ?? Data()
+    }
+
+    private func withInsightTimeout(
+        seconds: Double,
+        operation: @escaping () async -> Insight?
+    ) async -> Insight? {
+        await withTaskGroup(of: Insight?.self) { group in
+            group.addTask { await operation() }
+            group.addTask {
+                try? await Task.sleep(for: .seconds(seconds))
+                return nil
+            }
+            let result = await group.next() ?? nil
+            group.cancelAll()
+            return result
+        }
+    }
+
+    private static let placeholderCondition = "Complete your daily check-in to see a coaching readout here — it uses your energy, stress, mood, and sleep responses to build a picture of where things stand."
+    private static let placeholderCoaching = "The check-in takes about thirty seconds and gives the coaching here enough context to be specific rather than generic."
+}
+
+// MARK: - Chart types
+
+private struct WellbeingDataPoint: Identifiable {
+    var id: String { "\(Int(date.timeIntervalSince1970))|\(metric.rawValue)" }
+    let date: Date
+    let metric: WellbeingMetric
+    let value: Double
+}
+
+private enum WellbeingMetric: String, CaseIterable {
+    case mood   = "Mood"
+    case energy = "Energy"
+    case calm   = "Calm"
+
+    var color: Color {
+        switch self {
+        case .mood:   return .brandGold
+        case .energy: return .brandOrange
+        case .calm:   return .brandGreen
+        }
     }
 }
 
-/// A labeled 1–5 rating control for a single wellbeing metric.
-private struct MetricRatingRow: View {
-    let title: String
-    let icon: String
-    let tint: Color
-    @Binding var value: Int
+private struct WellbeingTrendChart: View {
+    let points: [WellbeingDataPoint]
+
+    private var xDomain: ClosedRange<Date> {
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: .now)
+        let start = calendar.date(byAdding: .day, value: -6, to: today) ?? today
+        // Extend half a day past today so the last axis mark isn't flush against
+        // the right edge of the plot area.
+        let end = calendar.date(byAdding: .hour, value: 12, to: today) ?? today
+        return start...end
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Label(title, systemImage: icon)
-                .font(.appTitle3)
-                .foregroundStyle(tint)
-
-            HStack(spacing: 10) {
-                ForEach(1...5, id: \.self) { rating in
-                    Circle()
-                        .fill(rating <= value ? tint : Color.secondary.opacity(0.2))
-                        .frame(width: 36, height: 36)
-                        .overlay(
-                            Text("\(rating)")
-                                .font(.appSubheadline)
-                                .foregroundStyle(rating <= value ? .white : .secondary)
-                        )
-                        .onTapGesture { value = rating }
+            // Custom legend — avoids duplicate entries from LineMark + PointMark.
+            HStack(spacing: 14) {
+                ForEach(WellbeingMetric.allCases, id: \.rawValue) { metric in
+                    HStack(spacing: 5) {
+                        Circle()
+                            .fill(metric.color)
+                            .frame(width: 7, height: 7)
+                        Text(metric.rawValue)
+                            .font(.appCaption)
+                            .foregroundStyle(.secondary)
+                    }
                 }
             }
+
+            if points.isEmpty {
+                Text("Check in to start seeing trends here.")
+                    .font(.appCaption)
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .frame(height: 110)
+            } else {
+                Chart(points) { point in
+                    LineMark(
+                        x: .value("Day", point.date, unit: .day),
+                        y: .value("Score", point.value),
+                        series: .value("Metric", point.metric.rawValue)
+                    )
+                    .foregroundStyle(point.metric.color)
+                    .interpolationMethod(.catmullRom)
+                    .lineStyle(StrokeStyle(lineWidth: 2))
+
+                    PointMark(
+                        x: .value("Day", point.date, unit: .day),
+                        y: .value("Score", point.value)
+                    )
+                    .foregroundStyle(point.metric.color)
+                    .symbolSize(28)
+                }
+                .chartLegend(.hidden)
+                .chartYAxis(.hidden)
+                .chartYScale(domain: -0.05...1.05)
+                .chartXScale(domain: xDomain)
+                .chartXAxis {
+                    AxisMarks(values: .stride(by: .day)) { _ in
+                        AxisValueLabel(format: .dateTime.weekday(.narrow), centered: true)
+                            .font(.appCaption2)
+                    }
+                }
+                .frame(maxWidth: .infinity)
+                .frame(height: 110)
+                .padding(.trailing, 8)
+            }
         }
+        .frame(maxWidth: .infinity)
+        .padding(16)
+        .background(RoundedRectangle(cornerRadius: 16).fill(.white))
     }
 }
 
@@ -130,5 +360,5 @@ private struct MetricRatingRow: View {
     NavigationStack {
         WellbeingView()
     }
-    .modelContainer(for: WellbeingEntry.self, inMemory: true)
+    .modelContainer(for: CheckInEntry.self, inMemory: true)
 }
