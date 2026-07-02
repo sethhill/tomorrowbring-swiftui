@@ -70,13 +70,21 @@ struct DailyHeatmap: View {
     }
 
     private func cell(_ day: DayTotal?) -> some View {
-        RoundedRectangle(cornerRadius: 2)
-            .fill(color(for: day))
-            .frame(width: cellSize, height: cellSize)
+        Group {
+            if let day {
+                RoundedRectangle(cornerRadius: 2)
+                    .fill(color(for: day))
+            } else {
+                // Leading alignment blanks and future slots are invisible so
+                // only real past days are visible in the grid.
+                Color.clear
+            }
+        }
+        .frame(width: cellSize, height: cellSize)
     }
 
-    private func color(for day: DayTotal?) -> Color {
-        guard let day, day.amount > 0 else { return Color.secondary.opacity(0.12) }
+    private func color(for day: DayTotal) -> Color {
+        guard day.amount > 0 else { return Color.secondary.opacity(0.12) }
         let intensity = day.amount / maxAmount
         return tint.opacity(0.3 + 0.7 * intensity)
     }
