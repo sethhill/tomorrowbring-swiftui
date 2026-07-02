@@ -283,14 +283,6 @@ extension CheckInView {
             ]
         ),
         CheckInQuestion(
-            prompt: "How well did you sleep?",
-            answers: [
-                CheckInAnswer("Well rested", emoji: "😴"),
-                CheckInAnswer("So-so", emoji: "😪"),
-                CheckInAnswer("Poorly", emoji: "🥴")
-            ]
-        ),
-        CheckInQuestion(
             prompt: "Anything you want to note?",
             placeholder: "What’s on your mind? (optional)"
         )

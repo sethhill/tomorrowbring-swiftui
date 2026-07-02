@@ -17,6 +17,7 @@ struct WellbeingView: View {
     @State private var condition = WellbeingView.placeholderCondition
     @State private var coaching = WellbeingView.placeholderCoaching
     @State private var isGeneratingInsight = false
+    @State private var sleepHours: Double? = nil
 
     @AppStorage("wellbeingInsightCache") private var insightCacheData = Data()
 
@@ -164,7 +165,17 @@ struct WellbeingView: View {
         return "\(Int(latest.timestamp.timeIntervalSince1970))"
     }
 
+    private func fetchSleepData() async {
+        #if canImport(HealthKit)
+        guard HealthSleepStore.isAvailable else { return }
+        let sleepStore = HealthSleepStore()
+        await sleepStore.requestAuthorization()
+        sleepHours = await sleepStore.lastNightSleepHours()
+        #endif
+    }
+
     private func loadOrGenerateInsight(forceRefresh: Bool = false) async {
+        await fetchSleepData()
         guard !isGeneratingInsight else { return }
         let signature = dataSignature
 
@@ -223,7 +234,17 @@ struct WellbeingView: View {
         default: "\(daysAgo) days ago"
         }
         let answers = latest.responses.map { "\($0.prompt) \($0.answer)." }.joined(separator: " ")
-        return "Check-in (\(when)): \(answers)"
+        var context = "Check-in (\(when)): \(answers)"
+        if let hours = sleepHours {
+            let quality: String
+            switch hours {
+            case 7.5...: quality = "well rested (\(String(format: "%.1f", hours))h)"
+            case 5.5...: quality = "so-so (\(String(format: "%.1f", hours))h)"
+            default:     quality = "poorly rested (\(String(format: "%.1f", hours))h)"
+            }
+            context += " Apple Health sleep data: \(quality)."
+        }
+        return context
     }
 
     private func loadInsightCache() -> CachedInsight? {
