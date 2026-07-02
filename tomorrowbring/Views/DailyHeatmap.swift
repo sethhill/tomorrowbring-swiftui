@@ -14,6 +14,8 @@ struct DailyHeatmap: View {
     let days: [DayTotal]
     let tint: Color
 
+    @AppStorage("weekStartsOnMonday") private var weekStartsOnMonday = false
+
     private let spacing: CGFloat = 3
     @State private var cellSize: CGFloat = 12
 
@@ -24,8 +26,11 @@ struct DailyHeatmap: View {
     /// Pads the front so the first day lands on its correct weekday row.
     private var paddedCells: [DayTotal?] {
         guard let first = days.first else { return [] }
-        let weekday = Calendar.current.component(.weekday, from: first.date) // 1 = Sunday
-        let leadingBlanks = Array<DayTotal?>(repeating: nil, count: weekday - 1)
+        let weekday = Calendar.current.component(.weekday, from: first.date) // 1=Sun … 7=Sat
+        // Sunday start: Sun=0, Mon=1 … Sat=6
+        // Monday start: Mon=0, Tue=1 … Sun=6
+        let leadingCount = weekStartsOnMonday ? (weekday - 2 + 7) % 7 : weekday - 1
+        let leadingBlanks = Array<DayTotal?>(repeating: nil, count: leadingCount)
         return leadingBlanks + days.map { Optional($0) }
     }
 

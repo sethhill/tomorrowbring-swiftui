@@ -8,6 +8,8 @@
 import SwiftUI
 
 struct SettingsView: View {
+    @AppStorage("weekStartsOnMonday") private var weekStartsOnMonday = false
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
@@ -15,6 +17,7 @@ struct SettingsView: View {
                     .font(.appLargeTitleSemibold)
                     .foregroundStyle(.brandGreen)
 
+                calendarSection
                 movementGoalSection
                 substanceGoalsSection
             }
@@ -31,6 +34,28 @@ struct SettingsView: View {
                 Text("Settings")
                     .font(.appTitle3)
             }
+        }
+    }
+
+    private var calendarSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Calendar")
+                .font(.appTitle3)
+                .foregroundStyle(.secondary)
+
+            HStack {
+                Text("Week starts on")
+                    .font(.appBodySemibold)
+                Spacer()
+                Picker("Week starts on", selection: $weekStartsOnMonday) {
+                    Text("Sunday").tag(false)
+                    Text("Monday").tag(true)
+                }
+                .pickerStyle(.menu)
+                .tint(.primary)
+            }
+            .padding()
+            .background(RoundedRectangle(cornerRadius: 16).fill(.white))
         }
     }
 
