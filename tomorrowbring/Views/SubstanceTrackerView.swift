@@ -24,6 +24,7 @@ struct SubstanceTrackerView: View {
     @State private var coaching: String
     @State private var isGeneratingInsight = false
     @State private var isRecentExpanded = false
+    @State private var insightIsAIGenerated = false
 
     init(kind: SubstanceKind) {
         self.kind = kind
@@ -168,6 +169,11 @@ struct SubstanceTrackerView: View {
             Text(coaching)
                 .font(.appBody)
                 .foregroundStyle(.primary)
+            if insightIsAIGenerated {
+                Text("Generated on-device with Apple Intelligence.")
+                    .font(.appCaption)
+                    .foregroundStyle(.secondary)
+            }
         }
     }
 
@@ -237,6 +243,7 @@ struct SubstanceTrackerView: View {
         if !forceRefresh, let cached = loadInsightCache(), cached.signature == signature {
             condition = cached.condition
             coaching = cached.coaching
+            insightIsAIGenerated = true
             return
         }
 
@@ -251,10 +258,12 @@ struct SubstanceTrackerView: View {
         if let insight {
             condition = insight.condition
             coaching = insight.coaching
+            insightIsAIGenerated = true
             saveInsightCache(signature: signature, insight: insight)
         } else {
             condition = Self.placeholderCondition
             coaching = Self.placeholderCoaching
+            insightIsAIGenerated = false
         }
     }
 

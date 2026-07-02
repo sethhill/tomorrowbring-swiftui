@@ -22,6 +22,7 @@ struct MovementView: View {
     @State private var coaching = MovementView.placeholderCoaching
     @State private var isGeneratingInsight = false
     @State private var isRecentExpanded = false
+    @State private var insightIsAIGenerated = false
 
     /// Cached insight, keyed by a signature of the movement data so it
     /// regenerates whenever a new activity (Health or manual) is recorded.
@@ -83,15 +84,11 @@ struct MovementView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .background(Color.appBackground.ignoresSafeArea())
-        .navigationTitle("Movement")
+        .navigationTitle("")
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif
         .toolbar {
-            ToolbarItem(placement: .principal) {
-                Text("Movement")
-                    .font(.appTitle3)
-            }
             ToolbarItem(placement: .primaryAction) {
                 Button {
                     Task { await loadOrGenerateInsight(forceRefresh: true) }
@@ -156,6 +153,11 @@ struct MovementView: View {
             Text(coaching)
                 .font(.appBody)
                 .foregroundStyle(.primary)
+            if insightIsAIGenerated {
+                Text("Generated on-device with Apple Intelligence.")
+                    .font(.appCaption)
+                    .foregroundStyle(.secondary)
+            }
         }
     }
 
@@ -287,6 +289,7 @@ struct MovementView: View {
         if !forceRefresh, let cached = loadInsightCache(), cached.signature == signature {
             condition = cached.condition
             coaching = cached.coaching
+            insightIsAIGenerated = true
             return
         }
 
@@ -301,10 +304,12 @@ struct MovementView: View {
         if let insight {
             condition = insight.condition
             coaching = insight.coaching
+            insightIsAIGenerated = true
             saveInsightCache(signature: signature, insight: insight)
         } else {
             condition = Self.placeholderCondition
             coaching = Self.placeholderCoaching
+            insightIsAIGenerated = false
         }
     }
 

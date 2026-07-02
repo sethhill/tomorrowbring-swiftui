@@ -35,16 +35,10 @@ struct SubstancesView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .background(Color.appBackground.ignoresSafeArea())
-        .navigationTitle("Substances")
+        .navigationTitle("")
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif
-        .toolbar {
-            ToolbarItem(placement: .principal) {
-                Text("Substances")
-                    .font(.appTitle3)
-            }
-        }
     }
 }
 

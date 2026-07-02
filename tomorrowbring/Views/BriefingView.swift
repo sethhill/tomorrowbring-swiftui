@@ -148,7 +148,6 @@ struct BriefingView: View {
                     Text(note)
                         .font(.appCaption)
                         .foregroundStyle(.secondary)
-                        .frame(maxWidth: .infinity, alignment: .center)
                         .padding(.top, 4)
                 }
             }
@@ -156,15 +155,11 @@ struct BriefingView: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color.appBackground.ignoresSafeArea())
-        .navigationTitle("Briefing")
+        .navigationTitle("")
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif
         .toolbar {
-            ToolbarItem(placement: .principal) {
-                Text("Briefing")
-                    .font(.appTitle3)
-            }
             ToolbarItem(placement: .primaryAction) {
                 Button {
                     Task { await generate(forceRefresh: true) }

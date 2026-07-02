@@ -25,16 +25,10 @@ struct SettingsView: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color.appBackground.ignoresSafeArea())
-        .navigationTitle("Settings")
+        .navigationTitle("")
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif
-        .toolbar {
-            ToolbarItem(placement: .principal) {
-                Text("Settings")
-                    .font(.appTitle3)
-            }
-        }
     }
 
     private var calendarSection: some View {
