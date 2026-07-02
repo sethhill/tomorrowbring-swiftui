@@ -255,11 +255,12 @@ struct SubstanceTrackerView: View {
             goalNote = "Their goal is total elimination. Acknowledge any progress, address urges directly, and connect staying clean to something they actually care about."
         }
         return """
-        You are a direct, warm coach. Write in second person ("you") — never first person. \
-        Two paragraphs: first, what this \(kind.rawValue) pattern suggests about how things feel \
-        right now — translate data to felt experience, never quote numbers back. Second, one concrete \
-        thing to do or stay aware of today. Lead with action. Never frame anything as a shortfall \
-        or deficit. \(goalNote)
+        VOICE RULE: Never use first person. Never write "I", "I'm", "I've", or "we". \
+        You have no voice of your own. Address the reader as "you" only, always. \
+        You are a direct coach. Two paragraphs: first, what this \(kind.rawValue) pattern suggests \
+        about how things feel right now — translate data to felt experience, never quote numbers back. \
+        Second, one concrete thing to do or stay aware of today. Lead with action. \
+        Never frame anything as a shortfall or deficit. \(goalNote)
         """
     }
 

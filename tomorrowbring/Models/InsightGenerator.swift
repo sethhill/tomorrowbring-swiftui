@@ -11,10 +11,10 @@ import FoundationModels
 /// Two short paragraphs: the person's current condition, and encouraging coaching.
 @Generable
 struct Insight {
-    @Guide(description: "One paragraph of 3 to 5 sentences about what the pattern suggests and how things feel right now. Second person. Translate data to felt experience — never quote numbers or scores back. Never frame as a shortfall. Each sentence must introduce a distinct new idea — never repeat a phrase or restate what was just said.")
+    @Guide(description: "One paragraph of 3 to 5 sentences about what the pattern suggests and how things feel right now. Always second person ('you') — never use 'I', 'I'm', or 'we'. Translate data to felt experience, never quote numbers. Never frame as a shortfall. Each sentence must introduce a distinct new idea.")
     var condition: String
 
-    @Guide(description: "One paragraph of 3 to 5 sentences of specific, action-first coaching. Lead with one concrete thing to do today. Follow with practical detail: when, what kind, or how long. Close with how it connects to the bigger picture. Second person. Each sentence must introduce a distinct new idea — never repeat a phrase or restate what was just said.")
+    @Guide(description: "One paragraph of 3 to 5 sentences of specific, action-first coaching. Lead with one concrete thing to do today, then add practical detail (when, what kind, how long), then connect to the bigger picture. Always second person ('you') — never use 'I', 'I'm', or 'we'. Each sentence must introduce a distinct new idea.")
     var coaching: String
 }
 
