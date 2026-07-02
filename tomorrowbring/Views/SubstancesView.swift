@@ -49,13 +49,13 @@ struct SubstancesView: View {
                 } label: {
                     Text(kind.rawValue)
                         .font(.appBodySemibold)
-                        .foregroundStyle(selectedKind == kind ? .primary : .secondary)
+                        .foregroundStyle(selectedKind == kind ? Color.white : Color.secondary)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 12)
                         .background {
                             if selectedKind == kind {
                                 Capsule()
-                                    .fill(.white)
+                                    .fill(Color.brandOrange)
                                     .matchedGeometryEffect(id: "selectedPill", in: pickerNamespace)
                             }
                         }

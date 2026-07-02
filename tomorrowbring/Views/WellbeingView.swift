@@ -372,7 +372,7 @@ private struct WellbeingTrendChart: View {
                     }
                 }
                 .frame(maxWidth: .infinity)
-                .frame(height: 110)
+                .frame(height: 165)
                 .padding(.trailing, 8)
             }
         }
