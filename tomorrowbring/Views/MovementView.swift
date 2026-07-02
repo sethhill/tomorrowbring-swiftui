@@ -74,11 +74,12 @@ struct MovementView: View {
             Button {
                 isLogging = true
             } label: {
-                Label("Log Workout", systemImage: "plus")
+                Label("Log workout", systemImage: "plus")
                     .frame(maxWidth: .infinity)
             }
-            .buttonStyle(.borderedProminent)
-            .tint(.brandGold)
+            .buttonStyle(.glass(.regular.tint(.brandGold)))
+            .font(.appBodySemibold)
+            .foregroundStyle(.white)
             .controlSize(.large)
             .padding()
         }

@@ -129,6 +129,7 @@ struct CheckInView: View {
                         }
                         .buttonStyle(.borderedProminent)
                         .tint(.brandGreen)
+                        .font(.appBodySemibold)
                         .controlSize(.large)
                     }
                 }
@@ -158,6 +159,7 @@ struct CheckInView: View {
             }
             .buttonStyle(.borderedProminent)
             .tint(.brandGreen)
+            .font(.appBodySemibold)
             .controlSize(.large)
             .frame(maxWidth: .infinity)
         }
@@ -189,6 +191,7 @@ struct CheckInView: View {
             Button("Start Over", action: restart)
                 .buttonStyle(.borderedProminent)
                 .tint(.brandGreen)
+                .font(.appBodySemibold)
                 .controlSize(.large)
         }
     }

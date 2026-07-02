@@ -55,11 +55,12 @@ struct SubstanceTrackerView: View {
             Button {
                 isLogging = true
             } label: {
-                Label("Log \(kind.unit == "drinks" ? "a Drink" : kind.rawValue)", systemImage: "plus")
+                Label("Log \(kind.unit == "drinks" ? "a drink" : kind.rawValue)", systemImage: "plus")
                     .frame(maxWidth: .infinity)
             }
-            .buttonStyle(.borderedProminent)
-            .tint(kind.tint)
+            .buttonStyle(.glass(.regular.tint(.brandGold)))
+            .font(.appBodySemibold)
+            .foregroundStyle(.white)
             .controlSize(.large)
             .padding()
         }

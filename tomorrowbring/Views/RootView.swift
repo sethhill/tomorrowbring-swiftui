@@ -84,9 +84,8 @@ private struct LockScreen: View {
                 }
 
                 Button("Unlock", action: onUnlock)
-                    .buttonStyle(.borderedProminent)
-                    .tint(Color.appBackground)
-                    .foregroundStyle(.black)
+                    .buttonStyle(.glass)
+                    .font(.appBodySemibold)
                     .controlSize(.large)
                     .frame(maxWidth: .infinity)
             }
