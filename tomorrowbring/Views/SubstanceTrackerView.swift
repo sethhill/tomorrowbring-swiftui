@@ -23,6 +23,7 @@ struct SubstanceTrackerView: View {
     @State private var condition: String
     @State private var coaching: String
     @State private var isGeneratingInsight = false
+    @State private var isRecentExpanded = false
 
     init(kind: SubstanceKind) {
         self.kind = kind
@@ -175,30 +176,46 @@ struct SubstanceTrackerView: View {
     @ViewBuilder
     private var recentSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Recent")
-                .font(.appTitle3)
-                .foregroundStyle(.secondary)
+            Button {
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    isRecentExpanded.toggle()
+                }
+            } label: {
+                HStack {
+                    Text("Recent entries")
+                        .font(.appTitle3)
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                        .rotationEffect(.degrees(isRecentExpanded ? 90 : 0))
+                }
+            }
+            .buttonStyle(.plain)
 
-            if logs.isEmpty {
-                Text("No entries yet. Log your first below.")
-                    .font(.appSubheadline)
-                    .foregroundStyle(.secondary)
-            } else {
-                ForEach(logs.prefix(20)) { log in
-                    HStack(spacing: 12) {
-                        Image(systemName: kind.icon)
-                            .foregroundStyle(kind.tint)
-                            .frame(width: 28)
-                        Text(log.timestamp, format: .dateTime.month().day().hour().minute())
-                            .font(.appSubheadline)
-                            .foregroundStyle(.secondary)
-                        Spacer()
-                        Text("\(Int(log.amount)) \(kind.unit)")
-                            .font(.appSubheadlineSemibold)
+            if isRecentExpanded {
+                if logs.isEmpty {
+                    Text("No entries yet. Log your first below.")
+                        .font(.appSubheadline)
+                        .foregroundStyle(.secondary)
+                } else {
+                    ForEach(logs.prefix(20)) { log in
+                        HStack(spacing: 12) {
+                            Image(systemName: kind.icon)
+                                .foregroundStyle(kind.tint)
+                                .frame(width: 28)
+                            Text(log.timestamp, format: .dateTime.month().day().hour().minute())
+                                .font(.appSubheadline)
+                                .foregroundStyle(.secondary)
+                            Spacer()
+                            Text("\(Int(log.amount)) \(kind.unit)")
+                                .font(.appSubheadlineSemibold)
+                        }
+                        .padding(.vertical, 8)
+                        .padding(.horizontal, 12)
+                        .background(RoundedRectangle(cornerRadius: 12).fill(.white))
                     }
-                    .padding(.vertical, 8)
-                    .padding(.horizontal, 12)
-                    .background(RoundedRectangle(cornerRadius: 12).fill(.white))
                 }
             }
         }

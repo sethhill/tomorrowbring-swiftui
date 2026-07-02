@@ -21,6 +21,7 @@ struct MovementView: View {
     @State private var condition = MovementView.placeholderCondition
     @State private var coaching = MovementView.placeholderCoaching
     @State private var isGeneratingInsight = false
+    @State private var isRecentExpanded = false
 
     /// Cached insight, keyed by a signature of the movement data so it
     /// regenerates whenever a new activity (Health or manual) is recorded.
@@ -193,17 +194,33 @@ struct MovementView: View {
     @ViewBuilder
     private var recentSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Recent")
-                .font(.appTitle3)
-                .foregroundStyle(.secondary)
+            Button {
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    isRecentExpanded.toggle()
+                }
+            } label: {
+                HStack {
+                    Text("Recent entries")
+                        .font(.appTitle3)
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                        .rotationEffect(.degrees(isRecentExpanded ? 90 : 0))
+                }
+            }
+            .buttonStyle(.plain)
 
-            if activities.isEmpty {
-                Text("No workouts yet. Log one below, or grant Apple Health access to see your recorded activity.")
-                    .font(.appSubheadline)
-                    .foregroundStyle(.secondary)
-            } else {
-                ForEach(activities.prefix(20)) { activity in
-                    activityRow(activity)
+            if isRecentExpanded {
+                if activities.isEmpty {
+                    Text("No workouts yet. Log one below, or grant Apple Health access to see your recorded activity.")
+                        .font(.appSubheadline)
+                        .foregroundStyle(.secondary)
+                } else {
+                    ForEach(activities.prefix(20)) { activity in
+                        activityRow(activity)
+                    }
                 }
             }
         }
