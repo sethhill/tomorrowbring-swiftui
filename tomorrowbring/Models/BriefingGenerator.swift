@@ -49,18 +49,25 @@ enum BriefingTheme: String, CaseIterable {
             """
         case .alcohol:
             return """
-            alcohol and how it interplays with THC urges today — the combined pull in the evening, \
-            how the two reinforce each other, what to stay aware of. When near a weekly limit, focus \
-            on what's gained by holding back, not what's remaining. Ask what skipping tonight makes \
-            possible tomorrow.
+            alcohol and how it interplays with THC urges. Tailor to time of day: morning (slate is \
+            clean — set a light, clear intention for tonight), afternoon (preview the evening choice \
+            before the pull starts), evening (what's gained by holding back; what skipping tonight \
+            makes possible tomorrow). When near a weekly limit, focus on what's gained, not what's \
+            remaining.
             """
         case .movement:
             return """
-            a specific, realistic movement suggestion for today. If weather data is provided, weave \
-            it in naturally — only mention weather here. Lead with what to do, not what's been done.
+            a specific, realistic movement suggestion. Tailor to time of day: morning (ideal window \
+            — move before the day fills up), afternoon (a break in the middle of the day keeps \
+            momentum alive), evening (gentle movement to wind down, not intensity). Lead with what \
+            to do, not what's been done.
             """
         case .connection:
-            return "a small, specific gesture toward their partner — realistic for the time of day."
+            return """
+            a small, specific gesture toward their partner. Tailor to time of day: morning (a warm \
+            send-off or shared coffee), afternoon (a quick check-in or message), evening (turning \
+            toward each other to end the day well).
+            """
         }
     }
 }
@@ -68,10 +75,10 @@ enum BriefingTheme: String, CaseIterable {
 /// The structured shape we ask the on-device model to fill in for one card.
 @Generable
 struct GeneratedBriefingCard {
-    @Guide(description: "A short, punchy headline of 3 to 6 words")
+    @Guide(description: "A short, punchy headline of 3 to 5 words. Sentence case only — capitalize the first word, lowercase the rest.")
     var title: String
 
-    @Guide(description: "A warm, encouraging coaching paragraph of 3 to 5 sentences, supportive and specific, never preachy")
+    @Guide(description: "Exactly 3 sentences. Always write all 3 — stopping at 2 is an error. One flowing paragraph, warm and specific. Lead with action. Never preachy.")
     var message: String
 }
 
@@ -118,13 +125,13 @@ struct BriefingGenerator {
         let instructions = """
         VOICE RULE: Never use first person. Never write "I", "I'm", "I've", or "we". \
         You have no voice of your own. Address the reader as "you" only, always. \
-        You are a direct wellbeing coach. Write one flowing paragraph of 3–5 sentences weaving \
-        together the situation, what it means, and what to do — no lists or separated thoughts. \
-        Lead with action, not the metric. Never frame anything as a shortfall or deficit. \
-        Never say "you haven't" — if there is nothing constructive to offer, skip it. \
-        Never quote wellbeing scores as numbers — describe how they feel instead. \
-        Treat data as lived experience, not a report card. Connect substance guidance to what the \
-        person actually cares about, not just a goal number.
+        TIME OF DAY RULE: The prompt states the time of day. You MUST match your advice to it — \
+        morning cards set up the day ahead, afternoon cards stay grounded mid-day, evening cards \
+        help outlast urges and wind down. Never give evening advice in a morning card. \
+        SENTENCE RULE: Always write exactly 3 sentences. Never stop at 2 — always write the third. \
+        CONTENT RULE: Lead with action, not the metric. Never frame anything as a shortfall. \
+        Never quote wellbeing scores as numbers. Treat data as lived experience. \
+        Connect substance guidance to what the person actually cares about, not just a goal number.
         """
 
         let prompt = """

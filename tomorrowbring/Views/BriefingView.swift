@@ -369,7 +369,7 @@ private struct BriefingCardView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(card.title)
+            Text(card.title.sentenceCased)
                 .font(.appTitle3)
                 .foregroundStyle(.brandGold)
             Text(card.message)
@@ -377,6 +377,13 @@ private struct BriefingCardView: View {
                 .foregroundStyle(.primary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+private extension String {
+    var sentenceCased: String {
+        guard let first = first else { return self }
+        return first.uppercased() + dropFirst().lowercased()
     }
 }
 
