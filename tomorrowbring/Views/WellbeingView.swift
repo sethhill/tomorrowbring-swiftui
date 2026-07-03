@@ -352,7 +352,7 @@ private struct WellbeingTrendChart: View {
                     )
                     .foregroundStyle(point.metric.color)
                     .interpolationMethod(.catmullRom)
-                    .lineStyle(StrokeStyle(lineWidth: 6))
+                    .lineStyle(StrokeStyle(lineWidth: 4))
 
                     PointMark(
                         x: .value("Day", point.date, unit: .day),
@@ -378,7 +378,7 @@ private struct WellbeingTrendChart: View {
         }
         .frame(maxWidth: .infinity)
         .padding(16)
-        .background(RoundedRectangle(cornerRadius: 16).fill(.white))
+        .background(RoundedRectangle(cornerRadius: 16).fill(.appWhite))
     }
 }
 

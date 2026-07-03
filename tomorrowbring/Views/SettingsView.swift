@@ -49,7 +49,7 @@ struct SettingsView: View {
                 .tint(.primary)
             }
             .padding()
-            .background(RoundedRectangle(cornerRadius: 16).fill(.white))
+            .background(RoundedRectangle(cornerRadius: 16).fill(.appWhite))
         }
     }
 
@@ -124,7 +124,7 @@ private struct MovementGoalCard: View {
                 .foregroundStyle(.secondary)
         }
         .padding()
-        .background(RoundedRectangle(cornerRadius: 16).fill(.white))
+        .background(RoundedRectangle(cornerRadius: 16).fill(.appWhite))
         .onChange(of: goal) { _, newGoal in
             newGoal.save()
         }
@@ -185,7 +185,7 @@ private struct SubstanceGoalCard: View {
                 .foregroundStyle(.secondary)
         }
         .padding()
-        .background(RoundedRectangle(cornerRadius: 16).fill(.white))
+        .background(RoundedRectangle(cornerRadius: 16).fill(.appWhite))
         .onChange(of: goal) { _, newGoal in
             newGoal.save(for: kind)
         }

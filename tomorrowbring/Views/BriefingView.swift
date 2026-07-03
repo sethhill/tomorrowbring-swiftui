@@ -280,43 +280,37 @@ extension BriefingView {
 
     private static let morningCards: [BriefingCard] = [
         BriefingCard(
+            title: "Read the morning",
+            message: "Your check-in gives you a starting point — use it to set the tone rather than just react to the day. Notice where your energy actually is, not where you think it should be. That honest read is the best tool you have for the next few hours.",
+            icon: "heart.fill",
+            tint: .brandGreen
+        ),
+        BriefingCard(
+            title: "Move before the day fills up",
+            message: "The morning window is the one that closes fastest — once the day gets going, movement gets pushed. Even ten easy minutes now keeps the streak alive and shifts the morning in a direction you'll feel later. Steadiness beats intensity every time.",
+            icon: "figure.walk",
+            tint: .brandGold
+        ),
+        BriefingCard(
             title: "Bank the clear morning",
-            message: "The morning is when the pull toward THC is at its quietest — notice the sharpness and the absence of fog. Let that feeling be the argument for tonight rather than a rule you're forcing on yourself. You don't have to do anything to earn it right now except notice it and carry it forward.",
+            message: "The morning is when the pull toward THC is at its quietest — notice the sharpness and the absence of fog. Let that feeling be the argument for tonight rather than a rule you're forcing on yourself. Carry it forward.",
             icon: "leaf.fill",
             tint: .brandGreen
         ),
         BriefingCard(
             title: "Nothing to manage yet",
-            message: "The day is a blank slate — no decisions to make and no streak to defend. Keep it that way by not deciding anything now; the real choice lives in the evening. For now, just bank the calm of a morning that doesn't owe anything to last night.",
+            message: "The day is a blank slate — no decisions to make and no streak to defend. Keep it that way by not deciding anything now; the real choice lives in the evening. Bank the calm of a morning that doesn't owe anything to last night.",
             icon: "wineglass.fill",
-            tint: .brandOrange
-        ),
-        BriefingCard(
-            title: "Move before the heat",
-            message: "It won't be cooler than it is right now, so if there's a walk in today, the morning is your window. Keep it easy — steadiness beats intensity every time. Even ten gentle minutes keeps the streak alive and nudges things in the right direction.",
-            icon: "figure.walk",
-            tint: .brandGold
-        ),
-        BriefingCard(
-            title: "Set a warm tone early",
-            message: "The first small gesture of the day tends to set the weather for both of you. A coffee made without being asked, a question about her morning, a hand on the shoulder — these tiny bids are what keep the bond steady. It costs almost nothing and heads off quiet friction before it has a chance to build.",
-            icon: "heart.fill",
             tint: .brandOrange
         )
     ]
 
     private static let afternoonCards: [BriefingCard] = [
         BriefingCard(
-            title: "Ride out the afternoon dip",
-            message: "The mid-afternoon lull is a sneaky one — the reach for something to take the edge off is usually energy talking, not real craving. Name it for what it is before you act on it, and more often than not it loosens its grip on its own. A short walk, a glass of water, or five minutes away from the screen does more than you'd expect.",
-            icon: "leaf.fill",
+            title: "Check in with yourself",
+            message: "Mid-afternoon is a good moment to notice what's shifted since this morning — energy, mood, tension. You don't need to fix anything, just name it. Awareness is usually enough to keep the afternoon from quietly going sideways.",
+            icon: "heart.fill",
             tint: .brandGreen
-        ),
-        BriefingCard(
-            title: "Still steady, stay ahead of it",
-            message: "The afternoon is a good time to picture how you want tonight to go, before the evening pull starts making the case for you. If you decide now that tonight leans toward tea and an early wind-down, the choice is already half made. Future-you wakes up grateful for the call you make this afternoon.",
-            icon: "wineglass.fill",
-            tint: .brandOrange
         ),
         BriefingCard(
             title: "A little still counts",
@@ -325,36 +319,42 @@ extension BriefingView {
             tint: .brandGold
         ),
         BriefingCard(
-            title: "Plan the evening while it's calm",
-            message: "Things are quieter now than they'll be tonight, so this is the moment to set up a gentle evening. A small plan — tea, a show you'll both enjoy, an earlier wind-down — gives the night something to steer toward instead of drift through. You don't need a grand gesture, just a shared intention.",
-            icon: "heart.fill",
+            title: "Ride out the afternoon dip",
+            message: "The mid-afternoon lull is a sneaky one — the reach for something to take the edge off is usually energy talking, not real craving. Name it for what it is before you act on it, and more often than not it loosens its grip on its own.",
+            icon: "leaf.fill",
+            tint: .brandGreen
+        ),
+        BriefingCard(
+            title: "Stay ahead of the evening",
+            message: "The afternoon is a good time to picture how you want tonight to go, before the pull starts making the case for you. If you decide now that tonight leans toward tea and an early wind-down, the choice is already half made.",
+            icon: "wineglass.fill",
             tint: .brandOrange
         )
     ]
 
     private static let eveningCards: [BriefingCard] = [
         BriefingCard(
+            title: "Wind down intentionally",
+            message: "How the evening goes is largely determined by what you do in the next hour — not the last one. Notice where you're holding tension and give it somewhere to go: a walk, a stretch, something quiet. The morning version of you starts here.",
+            icon: "heart.fill",
+            tint: .brandGreen
+        ),
+        BriefingCard(
+            title: "Keep the streak going",
+            message: "Consistency is doing the real work here, even when the sessions are short. A little gentle movement at home or some stretching keeps the momentum alive without overdoing it. Steady effort, lighter evenings, decent sleep.",
+            icon: "figure.walk",
+            tint: .brandGold
+        ),
+        BriefingCard(
             title: "Outlast the evening call",
-            message: "The pull usually crests and fades inside fifteen or twenty minutes — you don't have to fight it, just outlast it. Before you reach, ask what's actually underneath it tonight: fatigue, restlessness, or just the habit of the hour? A lighter evening buys you a sharper, more present morning, and that's worth more than the haze.",
+            message: "The pull usually crests and fades inside fifteen or twenty minutes — you don't have to fight it, just outlast it. Before you reach, ask what's actually underneath it: fatigue, restlessness, or just the habit of the hour.",
             icon: "leaf.fill",
             tint: .brandGreen
         ),
         BriefingCard(
             title: "You're steady on the drinks",
-            message: "No need to white-knuckle anything here — if the evening wants a ritual, let it be tea or a show rather than a pour. Every night you skip is a morning where you wake up ready instead of foggy. That version of you is worth protecting.",
+            message: "No need to white-knuckle anything here — if the evening wants a ritual, let it be tea or a show rather than a pour. Every night you skip is a morning where you wake up ready instead of foggy.",
             icon: "wineglass.fill",
-            tint: .brandOrange
-        ),
-        BriefingCard(
-            title: "Keep the streak going",
-            message: "Consistency is doing the real work here, even when the sessions are short. A little gentle movement at home or some stretching keeps the momentum alive without overdoing it. Your body responds to exactly this — steady effort, lighter evenings, decent sleep.",
-            icon: "figure.walk",
-            tint: .brandGold
-        ),
-        BriefingCard(
-            title: "Turn toward her tonight",
-            message: "Notice the small bids she makes — a comment, a glance, a question — and turn toward them. Those tiny moments of being met are what keep the bond steady over time. One warm evening like this does more than any grand gesture.",
-            icon: "heart.fill",
             tint: .brandOrange
         )
     ]

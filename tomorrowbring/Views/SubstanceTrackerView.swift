@@ -121,7 +121,7 @@ struct SubstanceTrackerView: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 16)
-        .background(RoundedRectangle(cornerRadius: 16).fill(.white))
+        .background(RoundedRectangle(cornerRadius: 16).fill(.appWhite))
     }
 
     // MARK: - Heatmap
@@ -133,7 +133,7 @@ struct SubstanceTrackerView: View {
                 .foregroundStyle(.secondary)
             DailyHeatmap(days: dailyTotals(days: 90), tint: kind.tint)
                 .padding(16)
-                .background(RoundedRectangle(cornerRadius: 16).fill(.white))
+                .background(RoundedRectangle(cornerRadius: 16).fill(.appWhite))
         }
     }
 
@@ -192,7 +192,6 @@ struct SubstanceTrackerView: View {
                     Text("Recent entries")
                         .font(.appTitle3)
                         .foregroundStyle(.secondary)
-                    Spacer()
                     Image(systemName: "chevron.right")
                         .font(.caption.weight(.semibold))
                         .foregroundStyle(.secondary)
@@ -221,7 +220,7 @@ struct SubstanceTrackerView: View {
                         }
                         .padding(.vertical, 8)
                         .padding(.horizontal, 12)
-                        .background(RoundedRectangle(cornerRadius: 12).fill(.white))
+                        .background(RoundedRectangle(cornerRadius: 12).fill(.appWhite))
                     }
                 }
             }

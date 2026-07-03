@@ -12,32 +12,48 @@ import FoundationModels
 /// A coaching theme the briefing covers, carrying its presentation details and
 /// the seed used to prompt the on-device model.
 enum BriefingTheme: String, CaseIterable {
+    case wellbeing
+    case movement
     case thc
     case alcohol
-    case movement
-    case connection
 
     var icon: String {
         switch self {
-        case .thc: return "leaf.fill"
-        case .alcohol: return "wineglass.fill"
-        case .movement: return "figure.walk"
-        case .connection: return "heart.fill"
+        case .wellbeing: return "heart.fill"
+        case .movement:  return "figure.walk"
+        case .thc:       return "leaf.fill"
+        case .alcohol:   return "wineglass.fill"
         }
     }
 
     var tint: Color {
         switch self {
-        case .thc: return .brandGreen
-        case .alcohol: return .brandOrange
-        case .movement: return .brandGold
-        case .connection: return .brandOrange
+        case .wellbeing: return .brandGreen
+        case .movement:  return .brandGold
+        case .thc:       return .brandGreen
+        case .alcohol:   return .brandOrange
         }
     }
 
     /// What this card should focus on, woven into the prompt.
     var focus: String {
         switch self {
+        case .wellbeing:
+            return """
+            the person's current wellbeing state — their energy, mood, and stress level from the \
+            most recent check-in. Translate the check-in answers to a felt experience, never echo \
+            the raw words back. Tailor to time of day: morning (what this state means for the day \
+            ahead — what to protect or lean into), afternoon (what the state signals mid-day and \
+            whether anything needs adjusting), evening (how the day's arc looked and how to wind \
+            down well given where things landed). Connect to something concrete they can feel or notice.
+            """
+        case .movement:
+            return """
+            a specific, realistic movement suggestion. Tailor to time of day: morning (ideal window \
+            — move before the day fills up), afternoon (a break in the middle of the day keeps \
+            momentum alive), evening (gentle movement to wind down, not intensity). Lead with what \
+            to do, not what's been done.
+            """
         case .thc:
             return """
             cannabis urges and what might actually be driving them right now — fatigue, frustration, \
@@ -54,19 +70,6 @@ enum BriefingTheme: String, CaseIterable {
             before the pull starts), evening (what's gained by holding back; what skipping tonight \
             makes possible tomorrow). When near a weekly limit, focus on what's gained, not what's \
             remaining.
-            """
-        case .movement:
-            return """
-            a specific, realistic movement suggestion. Tailor to time of day: morning (ideal window \
-            — move before the day fills up), afternoon (a break in the middle of the day keeps \
-            momentum alive), evening (gentle movement to wind down, not intensity). Lead with what \
-            to do, not what's been done.
-            """
-        case .connection:
-            return """
-            a small, specific gesture toward their partner. Tailor to time of day: morning (a warm \
-            send-off or shared coffee), afternoon (a quick check-in or message), evening (turning \
-            toward each other to end the day well).
             """
         }
     }
