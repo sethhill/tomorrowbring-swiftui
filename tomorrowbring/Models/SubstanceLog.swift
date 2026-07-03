@@ -16,11 +16,19 @@ enum SubstanceKind: String, CaseIterable, Identifiable {
 
     var id: String { rawValue }
 
-    /// The unit a quantity is measured in.
+    /// The unit a quantity is measured in (always plural form).
     var unit: String {
         switch self {
         case .thc: return "mg"
         case .alcohol: return "drinks"
+        }
+    }
+
+    /// Returns the correctly pluralized unit for a given amount.
+    func unit(for amount: Double) -> String {
+        switch self {
+        case .thc: return "mg"
+        case .alcohol: return amount == 1 ? "drink" : "drinks"
         }
     }
 

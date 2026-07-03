@@ -46,13 +46,20 @@ struct DailyHeatmap: View {
         VStack(alignment: .leading, spacing: 8) {
             grid
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .onGeometryChange(for: CGFloat.self) { proxy in
-                    proxy.size.width
-                } action: { width in
-                    updateCellSize(forWidth: width)
-                }
             legend
         }
+        // Measure the container width via a background GeometryReader so the
+        // reading is independent of the grid's own natural size. This fires
+        // reliably in both directions (landscape → portrait included).
+        .background(
+            GeometryReader { geo in
+                Color.clear
+                    .onAppear { updateCellSize(forWidth: geo.size.width) }
+                    .onChange(of: geo.size.width) { _, newWidth in
+                        updateCellSize(forWidth: newWidth)
+                    }
+            }
+        )
     }
 
     private var grid: some View {

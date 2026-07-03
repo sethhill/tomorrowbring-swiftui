@@ -216,7 +216,7 @@ struct SubstanceTrackerView: View {
                                 .font(.appSubheadline)
                                 .foregroundStyle(.secondary)
                             Spacer()
-                            Text("\(Int(log.amount)) \(kind.unit)")
+                            Text("\(Int(log.amount)) \(kind.unit(for: log.amount))")
                                 .font(.appSubheadlineSemibold)
                         }
                         .padding(.vertical, 8)

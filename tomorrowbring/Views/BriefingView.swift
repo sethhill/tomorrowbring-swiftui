@@ -246,12 +246,14 @@ struct BriefingView: View {
 
     private var header: some View {
         VStack(alignment: .leading, spacing: 4) {
+            Image(systemName: timeOfDay.icon)
+                .font(.system(size: 80))
+                .foregroundStyle(.brandGold)
+                .padding(.bottom, 4)
             HStack(spacing: 10) {
                 Text(timeOfDay.greeting)
                     .font(.appLargeTitleSemibold)
                     .foregroundStyle(.brandGreen)
-                Image(systemName: timeOfDay.icon)
-                    .foregroundStyle(.brandGold)
                 if isGenerating {
                     ProgressView()
                         .controlSize(.small)

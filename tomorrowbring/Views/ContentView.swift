@@ -20,12 +20,12 @@ enum AppSection: String, CaseIterable, Identifiable {
 
     var icon: String {
         switch self {
-        case .briefing:   return "sun.max"
-        case .wellbeing:  return "heart"
+        case .briefing:   return "sun.max.fill"
+        case .wellbeing:  return "heart.fill"
         case .movement:   return "figure.run"
-        case .substances: return "wineglass"
-        case .checkIn:    return "checkmark.circle"
-        case .settings:   return "gearshape"
+        case .substances: return "wineglass.fill"
+        case .checkIn:    return "checkmark.circle.fill"
+        case .settings:   return "gearshape.fill"
         }
     }
 

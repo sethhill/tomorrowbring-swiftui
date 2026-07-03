@@ -73,13 +73,26 @@ enum BriefingTheme: String, CaseIterable {
 }
 
 /// The structured shape we ask the on-device model to fill in for one card.
+/// Three separate sentence fields guarantee exactly 3 sentences — the model
+/// cannot stop early because every field must be populated.
 @Generable
 struct GeneratedBriefingCard {
-    @Guide(description: "A short, punchy headline of 3 to 5 words. Sentence case only — capitalize the first word, lowercase the rest.")
+    @Guide(description: "3 to 5 words. A punchy, specific headline. Sentence case — first word capitalized, rest lowercase. No trailing period.")
     var title: String
 
-    @Guide(description: "Exactly 3 sentences. Always write all 3 — stopping at 2 is an error. One flowing paragraph, warm and specific. Lead with action. Never preachy.")
-    var message: String
+    @Guide(description: "One sentence. The felt experience right now — what the data means for how this person feels, not what the numbers say. Second person. No numbers.")
+    var sentence1: String
+
+    @Guide(description: "One sentence. The one thing to do or stay aware of today. Begin with an action word. Not a restatement of sentence 1.")
+    var sentence2: String
+
+    @Guide(description: "One sentence. Why this matters beyond the goal — what it protects, enables, or connects to in their life.")
+    var sentence3: String
+}
+
+private func capitalizeFirst(_ s: String) -> String {
+    guard let first = s.first else { return s }
+    return first.uppercased() + s.dropFirst()
 }
 
 /// Generates briefing cards using Apple's on-device language model, one card per
@@ -128,10 +141,10 @@ struct BriefingGenerator {
         TIME OF DAY RULE: The prompt states the time of day. You MUST match your advice to it — \
         morning cards set up the day ahead, afternoon cards stay grounded mid-day, evening cards \
         help outlast urges and wind down. Never give evening advice in a morning card. \
-        SENTENCE RULE: Always write exactly 3 sentences. Never stop at 2 — always write the third. \
         CONTENT RULE: Lead with action, not the metric. Never frame anything as a shortfall. \
         Never quote wellbeing scores as numbers. Treat data as lived experience. \
-        Connect substance guidance to what the person actually cares about, not just a goal number.
+        Connect substance guidance to what the person actually cares about, not just a goal number. \
+        Each sentence field is exactly one complete sentence — no more, no less.
         """
 
         let prompt = """
@@ -144,11 +157,16 @@ struct BriefingGenerator {
         do {
             let response = try await session.respond(
                 to: prompt,
-                generating: GeneratedBriefingCard.self
+                generating: GeneratedBriefingCard.self,
+                options: GenerationOptions(temperature: 0.5)
             )
+            let g = response.content
+            var title = g.title
+            if title.hasSuffix(".") { title = String(title.dropLast()) }
+            let message = [g.sentence1, g.sentence2, g.sentence3].map(capitalizeFirst).joined(separator: " ")
             return BriefingCard(
-                title: response.content.title,
-                message: response.content.message,
+                title: title,
+                message: message,
                 icon: theme.icon,
                 tint: theme.tint,
                 theme: theme
