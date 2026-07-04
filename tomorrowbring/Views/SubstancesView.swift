@@ -68,9 +68,11 @@ struct SubstancesView: View {
     }
 }
 
+#if DEBUG
 #Preview {
     NavigationStack {
         SubstancesView()
     }
     .modelContainer(SubstancePreviewData.container)
 }
+#endif

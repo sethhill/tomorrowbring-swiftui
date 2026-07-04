@@ -375,6 +375,7 @@ struct SubstanceTrackerView: View {
     private static let placeholderCoaching = "Encouraging, personalized coaching will appear here."
 }
 
+#if DEBUG
 #Preview {
     NavigationStack {
         SubstanceTrackerView(kind: .thc)
@@ -382,3 +383,4 @@ struct SubstanceTrackerView: View {
     }
     .modelContainer(SubstancePreviewData.container)
 }
+#endif
