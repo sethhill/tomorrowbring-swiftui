@@ -9,5 +9,9 @@
 		<string>BanterGrotesk-Semibold.otf</string>
 		<string>BanterGrotesk-Black.otf</string>
 	</array>
+	<key>NSHealthShareUsageDescription</key>
+	<string>Tomorrowbring reads your sleep and activity data to personalize your daily briefing and track your wellbeing over time.</string>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>Tomorrowbring may write health data to keep your activity and wellbeing records in sync with Apple Health.</string>
 </dict>
 </plist>
