@@ -70,10 +70,13 @@ private struct LockScreen: View {
 
     var body: some View {
         ZStack(alignment: .bottom) {
+            Color.appBackground.ignoresSafeArea()
+
             Image("appSplash")
                 .resizable()
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .ignoresSafeArea()
+                .padding(.horizontal, 16)
+                .padding(.bottom, 24)
 
             VStack(spacing: 12) {
                 if let error {
@@ -90,6 +93,8 @@ private struct LockScreen: View {
                     .frame(maxWidth: .infinity)
             }
             .padding()
+            .padding(.bottom, 24)
         }
+        .ignoresSafeArea(edges: .bottom)
     }
 }

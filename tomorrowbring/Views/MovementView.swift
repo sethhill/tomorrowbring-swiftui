@@ -222,6 +222,15 @@ struct MovementView: View {
                 } else {
                     ForEach(activities.prefix(20)) { activity in
                         activityRow(activity)
+                            .swipeActions(edge: .trailing) {
+                                if activity.source == .manual {
+                                    Button(role: .destructive) {
+                                        deleteManualActivity(activity)
+                                    } label: {
+                                        Label("Delete", systemImage: "trash")
+                                    }
+                                }
+                            }
                     }
                 }
             }
@@ -260,6 +269,13 @@ struct MovementView: View {
         .padding(.vertical, 8)
         .padding(.horizontal, 12)
         .background(RoundedRectangle(cornerRadius: 12).fill(.appWhite))
+    }
+
+    private func deleteManualActivity(_ activity: MovementActivity) {
+        let entryId = activity.id.replacingOccurrences(of: "manual-", with: "")
+        if let entry = manualEntries.first(where: { $0.id.uuidString == entryId }) {
+            modelContext.delete(entry)
+        }
     }
 
     // MARK: - Helpers

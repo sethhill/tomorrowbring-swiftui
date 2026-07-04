@@ -14,6 +14,7 @@ import SwiftData
 struct SubstanceTrackerView: View {
     let kind: SubstanceKind
 
+    @Environment(\.modelContext) private var modelContext
     @Query private var logs: [SubstanceLog]
 
     /// Cached insight, keyed per substance so THC and Alcohol don't collide.
@@ -221,6 +222,13 @@ struct SubstanceTrackerView: View {
                         .padding(.vertical, 8)
                         .padding(.horizontal, 12)
                         .background(RoundedRectangle(cornerRadius: 12).fill(.appWhite))
+                        .swipeActions(edge: .trailing) {
+                            Button(role: .destructive) {
+                                modelContext.delete(log)
+                            } label: {
+                                Label("Delete", systemImage: "trash")
+                            }
+                        }
                     }
                 }
             }
