@@ -16,9 +16,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "E717C6CC2FF452F200F70132"
-               BuildableName = "tomorrowbring.app"
-               BlueprintName = "tomorrowbring"
-               ReferencedContainer = "container:tomorrowbring.xcodeproj">
+               BuildableName = "Tomorrowbring.app"
+               BlueprintName = "Tomorrowbring"
+               ReferencedContainer = "container:Tomorrowbring.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -46,9 +46,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "E717C6CC2FF452F200F70132"
-            BuildableName = "tomorrowbring.app"
-            BlueprintName = "tomorrowbring"
-            ReferencedContainer = "container:tomorrowbring.xcodeproj">
+            BuildableName = "Tomorrowbring.app"
+            BlueprintName = "Tomorrowbring"
+            ReferencedContainer = "container:Tomorrowbring.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </LaunchAction>
@@ -63,9 +63,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "E717C6CC2FF452F200F70132"
-            BuildableName = "tomorrowbring.app"
-            BlueprintName = "tomorrowbring"
-            ReferencedContainer = "container:tomorrowbring.xcodeproj">
+            BuildableName = "Tomorrowbring.app"
+            BlueprintName = "Tomorrowbring"
+            ReferencedContainer = "container:Tomorrowbring.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>

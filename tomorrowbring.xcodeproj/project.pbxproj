@@ -7,26 +7,26 @@
 	objects = {
 
 /* Begin PBXFileReference section */
-		E717C6CD2FF452F200F70132 /* tomorrowbring.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = tomorrowbring.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		E717C6CD2FF452F200F70132 /* Tomorrowbring.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Tomorrowbring.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		E77384022FF5A9BA007E33AC /* Exceptions for "tomorrowbring" folder in "tomorrowbring" target */ = {
+		E77384022FF5A9BA007E33AC /* Exceptions for "Tomorrowbring" folder in "Tomorrowbring" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
 			);
-			target = E717C6CC2FF452F200F70132 /* tomorrowbring */;
+			target = E717C6CC2FF452F200F70132 /* Tomorrowbring */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		E717C6CF2FF452F200F70132 /* tomorrowbring */ = {
+		E717C6CF2FF452F200F70132 /* Tomorrowbring */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				E77384022FF5A9BA007E33AC /* Exceptions for "tomorrowbring" folder in "tomorrowbring" target */,
+				E77384022FF5A9BA007E33AC /* Exceptions for "Tomorrowbring" folder in "Tomorrowbring" target */,
 			);
-			path = tomorrowbring;
+			path = Tomorrowbring;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -45,7 +45,7 @@
 		E717C6C42FF452F200F70132 = {
 			isa = PBXGroup;
 			children = (
-				E717C6CF2FF452F200F70132 /* tomorrowbring */,
+				E717C6CF2FF452F200F70132 /* Tomorrowbring */,
 				E717C6CE2FF452F200F70132 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -53,7 +53,7 @@
 		E717C6CE2FF452F200F70132 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				E717C6CD2FF452F200F70132 /* tomorrowbring.app */,
+				E717C6CD2FF452F200F70132 /* Tomorrowbring.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -61,9 +61,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		E717C6CC2FF452F200F70132 /* tomorrowbring */ = {
+		E717C6CC2FF452F200F70132 /* Tomorrowbring */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = E717C6D82FF452F300F70132 /* Build configuration list for PBXNativeTarget "tomorrowbring" */;
+			buildConfigurationList = E717C6D82FF452F300F70132 /* Build configuration list for PBXNativeTarget "Tomorrowbring" */;
 			buildPhases = (
 				E717C6C92FF452F200F70132 /* Sources */,
 				E717C6CA2FF452F200F70132 /* Frameworks */,
@@ -74,13 +74,13 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				E717C6CF2FF452F200F70132 /* tomorrowbring */,
+				E717C6CF2FF452F200F70132 /* Tomorrowbring */,
 			);
-			name = tomorrowbring;
+			name = Tomorrowbring;
 			packageProductDependencies = (
 			);
 			productName = tomorrowbring;
-			productReference = E717C6CD2FF452F200F70132 /* tomorrowbring.app */;
+			productReference = E717C6CD2FF452F200F70132 /* Tomorrowbring.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -112,7 +112,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				E717C6CC2FF452F200F70132 /* tomorrowbring */,
+				E717C6CC2FF452F200F70132 /* Tomorrowbring */,
 			);
 		};
 /* End PBXProject section */
@@ -267,6 +267,9 @@
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = tomorrowbring/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Tomorrowbring;
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
 				INFOPLIST_KEY_NSFaceIDUsageDescription = "Unlock tomorrowbring to view your private wellbeing data.";
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "Tomorrowbring reads your workouts to show your recent movement.";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
@@ -277,8 +280,7 @@
 				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphoneos*]" = UIStatusBarStyleDefault;
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				IPHONEOS_DEPLOYMENT_TARGET = 26.5;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
@@ -317,6 +319,9 @@
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = tomorrowbring/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Tomorrowbring;
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
 				INFOPLIST_KEY_NSFaceIDUsageDescription = "Unlock tomorrowbring to view your private wellbeing data.";
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "Tomorrowbring reads your workouts to show your recent movement.";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
@@ -327,8 +332,7 @@
 				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphoneos*]" = UIStatusBarStyleDefault;
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				IPHONEOS_DEPLOYMENT_TARGET = 26.5;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
@@ -364,7 +368,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		E717C6D82FF452F300F70132 /* Build configuration list for PBXNativeTarget "tomorrowbring" */ = {
+		E717C6D82FF452F300F70132 /* Build configuration list for PBXNativeTarget "Tomorrowbring" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				E717C6D92FF452F300F70132 /* Debug */,
