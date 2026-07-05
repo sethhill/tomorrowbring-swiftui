@@ -98,7 +98,7 @@
 					};
 				};
 			};
-			buildConfigurationList = E717C6C82FF452F200F70132 /* Build configuration list for PBXProject "tomorrowbring" */;
+			buildConfigurationList = E717C6C82FF452F200F70132 /* Build configuration list for PBXProject "Tomorrowbring" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -260,7 +260,7 @@
 				CODE_SIGN_ENTITLEMENTS = tomorrowbring/tomorrowbring.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = PPEVKGAG26;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_PREVIEWS = YES;
@@ -299,7 +299,7 @@
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 				XROS_DEPLOYMENT_TARGET = 26.5;
 			};
 			name = Debug;
@@ -312,7 +312,7 @@
 				CODE_SIGN_ENTITLEMENTS = tomorrowbring/tomorrowbring.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = PPEVKGAG26;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_PREVIEWS = YES;
@@ -351,7 +351,7 @@
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 				XROS_DEPLOYMENT_TARGET = 26.5;
 			};
 			name = Release;
@@ -359,7 +359,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		E717C6C82FF452F200F70132 /* Build configuration list for PBXProject "tomorrowbring" */ = {
+		E717C6C82FF452F200F70132 /* Build configuration list for PBXProject "Tomorrowbring" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				E717C6D62FF452F300F70132 /* Debug */,

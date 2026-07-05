@@ -80,6 +80,11 @@ struct CheckInView: View {
 
     var body: some View {
         VStack(spacing: 32) {
+            Text("Checking in")
+                .font(.appLargeTitleSemibold)
+                .foregroundStyle(.brandGreen)
+                .frame(maxWidth: .infinity, alignment: .leading)
+
             if currentIndex < questions.count {
                 questionStep(questions[currentIndex])
             } else {
@@ -109,11 +114,11 @@ struct CheckInView: View {
                 .tint(.brandGreen)
 
             Text("Question \(currentIndex + 1) of \(questions.count)")
-                .font(.appSubheadline)
-                .foregroundColor(.secondary)
+                .font(.appTitle3)
+                .foregroundStyle(.secondary)
 
             Text(question.prompt)
-                .font(.appTitle2)
+                .font(.appTitleSemibold)
                 .multilineTextAlignment(.center)
 
             if question.isOpenEnded {
@@ -127,8 +132,8 @@ struct CheckInView: View {
                             Text(answer.display)
                                 .frame(maxWidth: .infinity)
                         }
-                        .buttonStyle(.borderedProminent)
-                        .tint(.brandGreen)
+                        .buttonStyle(.glass(.regular.tint(.brandGold)))
+                        .foregroundStyle(.white)
                         .font(.appBodySemibold)
                         .controlSize(.large)
                     }
@@ -137,7 +142,9 @@ struct CheckInView: View {
 
             if currentIndex > 0 {
                 Button("Back", action: goBack)
-                    .buttonStyle(.borderless)
+                    .buttonStyle(.plain)
+                    .font(.appTitle3)
+                    .foregroundStyle(.secondary)
             }
         }
     }
@@ -150,15 +157,18 @@ struct CheckInView: View {
                 .padding(12)
                 .background(
                     RoundedRectangle(cornerRadius: 10)
-                        .fill(.white)
+                        .fill(.appWhite)
                         .stroke(Color.secondary.opacity(0.4))
                 )
 
-            Button("Done") {
+            Button {
                 currentIndex += 1
+            } label: {
+                Text("Done")
+                    .frame(maxWidth: .infinity)
             }
-            .buttonStyle(.borderedProminent)
-            .tint(.brandGreen)
+            .buttonStyle(.glass(.regular.tint(.brandGold)))
+            .foregroundStyle(.white)
             .font(.appBodySemibold)
             .controlSize(.large)
             .frame(maxWidth: .infinity)
@@ -188,11 +198,13 @@ struct CheckInView: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
 
-            Button("Start Over", action: restart)
-                .buttonStyle(.borderedProminent)
-                .tint(.brandGreen)
-                .font(.appBodySemibold)
-                .controlSize(.large)
+            Button(action: restart) {
+                Text("Start Over")
+            }
+            .buttonStyle(.glass(.regular.tint(.brandGold)))
+            .foregroundStyle(.white)
+            .font(.appBodySemibold)
+            .controlSize(.large)
         }
     }
 
@@ -249,7 +261,7 @@ extension CheckInView {
     /// Placeholder questions to demonstrate the flow.
     static let sampleQuestions: [CheckInQuestion] = [
         CheckInQuestion(
-            prompt: "How’s your energy today?",
+            prompt: "How's your energy today?",
             answers: [
                 CheckInAnswer("Great", emoji: "⚡️"),
                 CheckInAnswer("Good", emoji: "🙂"),
@@ -259,7 +271,7 @@ extension CheckInView {
             ]
         ),
         CheckInQuestion(
-            prompt: "How’s your stress level?",
+            prompt: "How's your stress level?",
             answers: [
                 CheckInAnswer("Chill", emoji: "😌"),
                 CheckInAnswer("A bit", emoji: "🙂"),
@@ -268,7 +280,7 @@ extension CheckInView {
             ]
         ),
         CheckInQuestion(
-            prompt: "How’s your work stress specifically?",
+            prompt: "How's your work stress specifically?",
             answers: [
                 CheckInAnswer("Under control", emoji: "✅"),
                 CheckInAnswer("Manageable", emoji: "🙂"),
@@ -287,11 +299,13 @@ extension CheckInView {
         ),
         CheckInQuestion(
             prompt: "Anything you want to note?",
-            placeholder: "What’s on your mind? (optional)"
+            placeholder: "What's on your mind? (optional)"
         )
     ]
 }
 
+#if DEBUG
 #Preview {
     CheckInView()
 }
+#endif
