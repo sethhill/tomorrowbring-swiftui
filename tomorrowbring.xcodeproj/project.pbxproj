@@ -260,7 +260,7 @@
 				CODE_SIGN_ENTITLEMENTS = tomorrowbring/tomorrowbring.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_TEAM = PPEVKGAG26;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_PREVIEWS = YES;
@@ -312,7 +312,7 @@
 				CODE_SIGN_ENTITLEMENTS = tomorrowbring/tomorrowbring.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_TEAM = PPEVKGAG26;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_PREVIEWS = YES;

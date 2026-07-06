@@ -60,7 +60,7 @@ struct WellbeingView: View {
 
     private var trendSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Last 7 days")
+            Text("Past week")
                 .font(.appTitle3)
                 .foregroundStyle(.secondary)
             WellbeingTrendChart(points: wellbeingPoints)

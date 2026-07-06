@@ -6,9 +6,15 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct SettingsView: View {
+    @Environment(\.modelContext) private var modelContext
+
     @AppStorage("weekStartsOnMonday") private var weekStartsOnMonday = false
+    @AppStorage("checkInPreferredTime") private var checkInPreferredTime = "Morning"
+
+    @State private var showRedoAlert = false
 
     var body: some View {
         ScrollView {
@@ -17,6 +23,7 @@ struct SettingsView: View {
                     .font(.appLargeTitleSemibold)
                     .foregroundStyle(.brandGreen)
 
+                checkInSection
                 calendarSection
                 movementGoalSection
                 substanceGoalsSection
@@ -29,6 +36,56 @@ struct SettingsView: View {
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif
+        .alert("Redo today's check-in?", isPresented: $showRedoAlert) {
+            Button("Clear and redo", role: .destructive) {
+                redoTodayCheckIn()
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("This will delete today's check-in so you can fill it in again.")
+        }
+    }
+
+    private var checkInSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Check-in")
+                .font(.appTitle3)
+                .foregroundStyle(.secondary)
+
+            VStack(spacing: 0) {
+                HStack {
+                    Text("Preferred time")
+                        .font(.appBodySemibold)
+                    Spacer()
+                    Picker("Preferred time", selection: $checkInPreferredTime) {
+                        Text("Morning").tag("Morning")
+                        Text("Afternoon").tag("Afternoon")
+                        Text("Evening").tag("Evening")
+                    }
+                    .pickerStyle(.menu)
+                    .tint(.primary)
+                }
+                .padding()
+
+                Divider()
+                    .padding(.horizontal)
+
+                Button {
+                    showRedoAlert = true
+                } label: {
+                    HStack {
+                        Text("Redo today's check-in")
+                            .font(.appBodySemibold)
+                        Spacer()
+                        Image(systemName: "arrow.counterclockwise")
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                .buttonStyle(.plain)
+                .padding()
+            }
+            .background(RoundedRectangle(cornerRadius: 16).fill(.appWhite))
+        }
     }
 
     private var calendarSection: some View {
@@ -73,6 +130,23 @@ struct SettingsView: View {
                 SubstanceGoalCard(kind: kind)
             }
         }
+    }
+
+    private func redoTodayCheckIn() {
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: .now)
+        guard let tomorrow = calendar.date(byAdding: .day, value: 1, to: today) else { return }
+
+        let descriptor = FetchDescriptor<CheckInEntry>(
+            predicate: #Predicate<CheckInEntry> { entry in
+                entry.timestamp >= today && entry.timestamp < tomorrow
+            }
+        )
+        let todayEntries = (try? modelContext.fetch(descriptor)) ?? []
+        for entry in todayEntries {
+            modelContext.delete(entry)
+        }
+        BriefingView.invalidateCache()
     }
 }
 

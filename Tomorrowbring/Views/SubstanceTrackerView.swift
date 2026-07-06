@@ -41,17 +41,67 @@ struct SubstanceTrackerView: View {
     }
 
     var body: some View {
-        ScrollView(.vertical) {
-            VStack(alignment: .leading, spacing: 24) {
-                summarySection
-                heatmapSection
-                insightSection
-                recentSection
+        List {
+            summarySection
+                .listRowBackground(Color.appBackground)
+                .listRowSeparator(.hidden)
+                .listRowInsets(EdgeInsets(top: 16, leading: 16, bottom: 8, trailing: 16))
+
+            heatmapSection
+                .listRowBackground(Color.appBackground)
+                .listRowSeparator(.hidden)
+                .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
+
+            insightSection
+                .listRowBackground(Color.appBackground)
+                .listRowSeparator(.hidden)
+                .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
+
+            recentSectionHeader
+                .listRowBackground(Color.appBackground)
+                .listRowSeparator(.hidden)
+                .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 4, trailing: 16))
+
+            if isRecentExpanded {
+                if logs.isEmpty {
+                    Text("No entries yet. Log your first below.")
+                        .font(.appSubheadline)
+                        .foregroundStyle(.secondary)
+                        .listRowBackground(Color.appBackground)
+                        .listRowSeparator(.hidden)
+                        .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 16, trailing: 16))
+                } else {
+                    ForEach(logs.prefix(20)) { log in
+                        HStack(spacing: 12) {
+                            Image(systemName: kind.icon)
+                                .foregroundStyle(kind.tint)
+                                .frame(width: 28)
+                            Text(log.timestamp, format: .dateTime.month().day().hour().minute())
+                                .font(.appSubheadline)
+                                .foregroundStyle(.secondary)
+                            Spacer()
+                            Text("\(Int(log.amount)) \(kind.unit(for: log.amount))")
+                                .font(.appSubheadlineSemibold)
+                        }
+                        .padding(.vertical, 14)
+                        .padding(.horizontal, 12)
+                        .background(RoundedRectangle(cornerRadius: 12).fill(.appWhite))
+                        .listRowBackground(Color.clear)
+                        .listRowSeparator(.hidden)
+                        .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+                        .swipeActions(edge: .trailing) {
+                            Button(role: .destructive) {
+                                modelContext.delete(log)
+                            } label: {
+                                Label("Delete", systemImage: "trash")
+                            }
+                        }
+                    }
+                }
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding()
         }
-        .scrollBounceBehavior(.basedOnSize, axes: [.horizontal])
+        .listStyle(.plain)
+        .scrollContentBackground(.hidden)
         .safeAreaInset(edge: .bottom) {
             Button {
                 isLogging = true
@@ -98,7 +148,7 @@ struct SubstanceTrackerView: View {
 
     private var summarySection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("This week")
+            Text("Past week")
                 .font(.appTitle3)
                 .foregroundStyle(.secondary)
             HStack(spacing: 12) {
@@ -181,58 +231,23 @@ struct SubstanceTrackerView: View {
 
     // MARK: - Recent
 
-    @ViewBuilder
-    private var recentSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Button {
-                withAnimation(.easeInOut(duration: 0.2)) {
-                    isRecentExpanded.toggle()
-                }
-            } label: {
-                HStack {
-                    Text("Recent entries")
-                        .font(.appTitle3)
-                        .foregroundStyle(.secondary)
-                    Image(systemName: "chevron.right")
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(.secondary)
-                        .rotationEffect(.degrees(isRecentExpanded ? 90 : 0))
-                }
+    private var recentSectionHeader: some View {
+        Button {
+            withAnimation(.easeInOut(duration: 0.2)) {
+                isRecentExpanded.toggle()
             }
-            .buttonStyle(.plain)
-
-            if isRecentExpanded {
-                if logs.isEmpty {
-                    Text("No entries yet. Log your first below.")
-                        .font(.appSubheadline)
-                        .foregroundStyle(.secondary)
-                } else {
-                    ForEach(logs.prefix(20)) { log in
-                        HStack(spacing: 12) {
-                            Image(systemName: kind.icon)
-                                .foregroundStyle(kind.tint)
-                                .frame(width: 28)
-                            Text(log.timestamp, format: .dateTime.month().day().hour().minute())
-                                .font(.appSubheadline)
-                                .foregroundStyle(.secondary)
-                            Spacer()
-                            Text("\(Int(log.amount)) \(kind.unit(for: log.amount))")
-                                .font(.appSubheadlineSemibold)
-                        }
-                        .padding(.vertical, 8)
-                        .padding(.horizontal, 12)
-                        .background(RoundedRectangle(cornerRadius: 12).fill(.appWhite))
-                        .swipeActions(edge: .trailing) {
-                            Button(role: .destructive) {
-                                modelContext.delete(log)
-                            } label: {
-                                Label("Delete", systemImage: "trash")
-                            }
-                        }
-                    }
-                }
+        } label: {
+            HStack {
+                Text("Recent entries")
+                    .font(.appTitle3)
+                    .foregroundStyle(.secondary)
+                Image(systemName: "chevron.right")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.secondary)
+                    .rotationEffect(.degrees(isRecentExpanded ? 90 : 0))
             }
         }
+        .buttonStyle(.plain)
     }
 
     // MARK: - Insight generation

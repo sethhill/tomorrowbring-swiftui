@@ -1,7 +1,7 @@
 {
   "images" : [
     {
-      "filename" : "tb-light.png",
+      "filename" : "AppIcon1024x1024.png",
       "idiom" : "universal",
       "platform" : "ios",
       "size" : "1024x1024"
@@ -13,7 +13,6 @@
           "value" : "dark"
         }
       ],
-      "filename" : "tb-dark.png",
       "idiom" : "universal",
       "platform" : "ios",
       "size" : "1024x1024"

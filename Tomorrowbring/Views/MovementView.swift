@@ -49,41 +49,72 @@ struct MovementView: View {
     }
 
     var body: some View {
-        ScrollView(.vertical) {
-            VStack(alignment: .leading, spacing: 24) {
-                Text("Movement")
-                    .font(.appLargeTitleSemibold)
-                    .foregroundStyle(.brandGreen)
-                summarySection
-                heatmapSection
-                insightSection
+        List {
+            Text("Movement")
+                .font(.appLargeTitleSemibold)
+                .foregroundStyle(.brandGreen)
+                .listRowBackground(Color.appBackground)
+                .listRowSeparator(.hidden)
+                .listRowInsets(EdgeInsets(top: 16, leading: 16, bottom: 8, trailing: 16))
 
-                if let healthNote {
-                    Text(healthNote)
-                        .font(.appCaption)
+            summarySection
+                .listRowBackground(Color.appBackground)
+                .listRowSeparator(.hidden)
+                .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
+
+            heatmapSection
+                .listRowBackground(Color.appBackground)
+                .listRowSeparator(.hidden)
+                .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
+
+            insightSection
+                .listRowBackground(Color.appBackground)
+                .listRowSeparator(.hidden)
+                .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
+
+            if let healthNote {
+                Text(healthNote)
+                    .font(.appCaption)
+                    .foregroundStyle(.secondary)
+                    .listRowBackground(Color.appBackground)
+                    .listRowSeparator(.hidden)
+                    .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+            }
+
+            recentSectionHeader
+                .listRowBackground(Color.appBackground)
+                .listRowSeparator(.hidden)
+                .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 4, trailing: 16))
+
+            if isRecentExpanded {
+                if activities.isEmpty {
+                    Text("No workouts yet. Log one below, or grant Apple Health access to see your recorded activity.")
+                        .font(.appSubheadline)
                         .foregroundStyle(.secondary)
+                        .listRowBackground(Color.appBackground)
+                        .listRowSeparator(.hidden)
+                        .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 16, trailing: 16))
+                } else {
+                    ForEach(activities.prefix(20)) { activity in
+                        activityRow(activity)
+                            .listRowBackground(Color.clear)
+                            .listRowSeparator(.hidden)
+                            .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+                            .swipeActions(edge: .trailing) {
+                                if activity.source == .manual {
+                                    Button(role: .destructive) {
+                                        deleteManualActivity(activity)
+                                    } label: {
+                                        Label("Delete", systemImage: "trash")
+                                    }
+                                }
+                            }
+                    }
                 }
-
-                recentSection
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding()
         }
-        .scrollBounceBehavior(.basedOnSize, axes: [.horizontal])
-        .safeAreaInset(edge: .bottom) {
-            Button {
-                isLogging = true
-            } label: {
-                Label("Log workout", systemImage: "plus")
-                    .frame(maxWidth: .infinity)
-            }
-            .buttonStyle(.glass(.regular.tint(.brandGold)))
-            .font(.appBodySemibold)
-            .foregroundStyle(.white)
-            .controlSize(.large)
-            .padding()
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .listStyle(.plain)
+        .scrollContentBackground(.hidden)
         .background(Color.appBackground.ignoresSafeArea())
         .navigationTitle("")
         #if os(iOS)
@@ -99,6 +130,19 @@ struct MovementView: View {
                 .disabled(isGeneratingInsight)
             }
         }
+        .safeAreaInset(edge: .bottom) {
+            Button {
+                isLogging = true
+            } label: {
+                Label("Log workout", systemImage: "plus")
+                    .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.glass(.regular.tint(.brandGold)))
+            .font(.appBodySemibold)
+            .foregroundStyle(.white)
+            .controlSize(.large)
+            .padding()
+        }
         .sheet(isPresented: $isLogging) {
             LogMovementSheet()
                 .presentationDetents([.medium])
@@ -108,7 +152,6 @@ struct MovementView: View {
             await loadOrGenerateInsight()
         }
         .onChange(of: manualEntries.count) { _, _ in
-            // A newly logged workout changes the data signature; refresh insight.
             Task { await loadOrGenerateInsight() }
         }
     }
@@ -117,7 +160,7 @@ struct MovementView: View {
 
     private var summarySection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("This week")
+            Text("Past week")
                 .font(.appTitle3)
                 .foregroundStyle(.secondary)
             HStack(spacing: 12) {
@@ -162,79 +205,23 @@ struct MovementView: View {
         }
     }
 
-    /// Total minutes moved per calendar day for the most recent `days` days,
-    /// oldest first, including days with no activity (0 minutes).
-    private func dailyTotals(days: Int) -> [DayTotal] {
-        let calendar = Calendar.current
-        let today = calendar.startOfDay(for: .now)
-
-        var totals: [Date: Double] = [:]
-        for activity in activities {
-            let day = calendar.startOfDay(for: activity.date)
-            totals[day, default: 0] += activity.durationMinutes
-        }
-
-        return (0..<days).reversed().compactMap { offset in
-            guard let day = calendar.date(byAdding: .day, value: -offset, to: today) else { return nil }
-            return DayTotal(date: day, amount: totals[day] ?? 0)
-        }
-    }
-
-    private func statCard(value: String, label: String) -> some View {
-        VStack(spacing: 4) {
-            Text(value)
-                .font(.appDisplaySemibold)
-                .foregroundStyle(.brandGold)
-            Text(label)
-                .font(.appCaption)
-                .foregroundStyle(.secondary)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 16)
-        .background(RoundedRectangle(cornerRadius: 16).fill(.appWhite))
-    }
-
-    @ViewBuilder
-    private var recentSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Button {
-                withAnimation(.easeInOut(duration: 0.2)) {
-                    isRecentExpanded.toggle()
-                }
-            } label: {
-                HStack {
-                    Text("Recent entries")
-                        .font(.appTitle3)
-                        .foregroundStyle(.secondary)
-                    Image(systemName: "chevron.right")
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(.secondary)
-                        .rotationEffect(.degrees(isRecentExpanded ? 90 : 0))
-                }
+    private var recentSectionHeader: some View {
+        Button {
+            withAnimation(.easeInOut(duration: 0.2)) {
+                isRecentExpanded.toggle()
             }
-            .buttonStyle(.plain)
-
-            if isRecentExpanded {
-                if activities.isEmpty {
-                    Text("No workouts yet. Log one below, or grant Apple Health access to see your recorded activity.")
-                        .font(.appSubheadline)
-                        .foregroundStyle(.secondary)
-                } else {
-                    ForEach(activities.prefix(20)) { activity in
-                        activityRow(activity)
-                            .swipeActions(edge: .trailing) {
-                                if activity.source == .manual {
-                                    Button(role: .destructive) {
-                                        deleteManualActivity(activity)
-                                    } label: {
-                                        Label("Delete", systemImage: "trash")
-                                    }
-                                }
-                            }
-                    }
-                }
+        } label: {
+            HStack {
+                Text("Recent entries")
+                    .font(.appTitle3)
+                    .foregroundStyle(.secondary)
+                Image(systemName: "chevron.right")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.secondary)
+                    .rotationEffect(.degrees(isRecentExpanded ? 90 : 0))
             }
         }
+        .buttonStyle(.plain)
     }
 
     private func activityRow(_ activity: MovementActivity) -> some View {
@@ -285,6 +272,38 @@ struct MovementView: View {
             return String(format: "%.1f km", meters / 1000)
         }
         return "\(Int(meters)) m"
+    }
+
+    /// Total minutes moved per calendar day for the most recent `days` days,
+    /// oldest first, including days with no activity (0 minutes).
+    private func dailyTotals(days: Int) -> [DayTotal] {
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: .now)
+
+        var totals: [Date: Double] = [:]
+        for activity in activities {
+            let day = calendar.startOfDay(for: activity.date)
+            totals[day, default: 0] += activity.durationMinutes
+        }
+
+        return (0..<days).reversed().compactMap { offset in
+            guard let day = calendar.date(byAdding: .day, value: -offset, to: today) else { return nil }
+            return DayTotal(date: day, amount: totals[day] ?? 0)
+        }
+    }
+
+    private func statCard(value: String, label: String) -> some View {
+        VStack(spacing: 4) {
+            Text(value)
+                .font(.appDisplaySemibold)
+                .foregroundStyle(.brandGold)
+            Text(label)
+                .font(.appCaption)
+                .foregroundStyle(.secondary)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 16)
+        .background(RoundedRectangle(cornerRadius: 16).fill(.appWhite))
     }
 
     // MARK: - Insight generation
