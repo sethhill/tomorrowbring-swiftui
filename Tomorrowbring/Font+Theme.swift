@@ -6,10 +6,10 @@
 import SwiftUI
 
 extension Font {
-    // MARK: Display — BanterGrotesk-Black
-    static let appLargeTitle = Font.custom("BanterGrotesk-Black", size: 34, relativeTo: .largeTitle)
-    static let appTitle      = Font.custom("BanterGrotesk-Black", size: 28, relativeTo: .title)
-    static let appTitle2     = Font.custom("BanterGrotesk-Black", size: 22, relativeTo: .title2)
+    // MARK: Display — BanterGrotesk-Semibold
+    static let appLargeTitle = Font.custom("BanterGrotesk-Semibold", size: 34, relativeTo: .largeTitle)
+    static let appTitle      = Font.custom("BanterGrotesk-Semibold", size: 28, relativeTo: .title)
+    static let appTitle2     = Font.custom("BanterGrotesk-Semibold", size: 22, relativeTo: .title2)
 
     // MARK: Section headers — BanterGrotesk-Semibold
     static let appDisplaySemibold     = Font.custom("BanterGrotesk-Semibold", size: 52, relativeTo: .largeTitle)

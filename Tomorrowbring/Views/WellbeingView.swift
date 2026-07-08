@@ -29,6 +29,7 @@ struct WellbeingView: View {
                     .font(.appLargeTitleSemibold)
                     .foregroundStyle(.brandGreen)
 
+                barometerSection
                 trendSection
                 insightSection
             }
@@ -134,6 +135,44 @@ struct WellbeingView: View {
         case "Mixed":   return 0.33
         case "Low":     return 0.0
         default:        return nil
+        }
+    }
+
+    // MARK: - Barometer section
+
+    private var barometerReadings: [BarometerReading] {
+        WellbeingMetric.allCases.compactMap { metric in
+            let points = wellbeingPoints.filter { $0.metric == metric }
+            guard let current = points.last?.value else { return nil }
+            let trend: BarometerTrend
+            if points.count >= 2 {
+                let diff = current - points[points.count - 2].value
+                trend = diff > 0.08 ? .up : (diff < -0.08 ? .down : .level)
+            } else {
+                trend = .level
+            }
+            return BarometerReading(metric: metric, current: current, trend: trend)
+        }
+    }
+
+    @ViewBuilder
+    private var barometerSection: some View {
+        if !barometerReadings.isEmpty {
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Today")
+                    .font(.appTitle3)
+                    .foregroundStyle(.secondary)
+                VStack(spacing: 0) {
+                    ForEach(Array(barometerReadings.enumerated()), id: \.offset) { index, reading in
+                        BarometerRow(metric: reading.metric, current: reading.current, trend: reading.trend)
+                        if index < barometerReadings.count - 1 {
+                            Divider().padding(.horizontal, 4)
+                        }
+                    }
+                }
+                .padding(16)
+                .background(RoundedRectangle(cornerRadius: 16).fill(.appWhite))
+            }
         }
     }
 
@@ -315,8 +354,6 @@ private struct WellbeingTrendChart: View {
         let calendar = Calendar.current
         let today = calendar.startOfDay(for: .now)
         let start = calendar.date(byAdding: .day, value: -6, to: today) ?? today
-        // Extend half a day past today so the last axis mark isn't flush against
-        // the right edge of the plot area.
         let end = calendar.date(byAdding: .hour, value: 12, to: today) ?? today
         return start...end
     }
@@ -379,6 +416,61 @@ private struct WellbeingTrendChart: View {
         .frame(maxWidth: .infinity)
         .padding(16)
         .background(RoundedRectangle(cornerRadius: 16).fill(.appWhite))
+    }
+}
+
+// MARK: - Barometer types
+
+private enum BarometerTrend: Equatable {
+    case up, down, level
+
+    var systemImageName: String {
+        switch self {
+        case .up:    return "arrow.up"
+        case .down:  return "arrow.down"
+        case .level: return "equal"
+        }
+    }
+}
+
+private struct BarometerReading {
+    let metric: WellbeingMetric
+    let current: Double
+    let trend: BarometerTrend
+}
+
+private struct BarometerRow: View {
+    let metric: WellbeingMetric
+    let current: Double
+    let trend: BarometerTrend
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Text(metric.rawValue)
+                .font(.appBodySemibold)
+                .foregroundStyle(metric.color)
+                .frame(width: 60, alignment: .leading)
+
+            GeometryReader { geo in
+                ZStack(alignment: .leading) {
+                    Capsule()
+                        .fill(metric.color.opacity(0.15))
+                        .frame(height: 10)
+
+                    Capsule()
+                        .fill(metric.color)
+                        .frame(width: max(0, geo.size.width * current), height: 10)
+                }
+                .frame(maxHeight: .infinity, alignment: .center)
+            }
+            .frame(height: 20)
+
+            Image(systemName: trend.systemImageName)
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundStyle(metric.color)
+                .frame(width: 20, alignment: .trailing)
+        }
+        .padding(.vertical, 10)
     }
 }
 
