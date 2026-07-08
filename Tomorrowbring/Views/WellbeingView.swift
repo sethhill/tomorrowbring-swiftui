@@ -345,6 +345,15 @@ private enum WellbeingMetric: String, CaseIterable {
         case .calm:   return .brandGreen
         }
     }
+
+    // Small vertical nudge so overlapping lines stay visually distinct.
+    var displayOffset: Double {
+        switch self {
+        case .mood:   return  0.03
+        case .energy: return  0.0
+        case .calm:   return -0.03
+        }
+    }
 }
 
 private struct WellbeingTrendChart: View {
@@ -382,21 +391,17 @@ private struct WellbeingTrendChart: View {
                     .frame(height: 110)
             } else {
                 Chart(points) { point in
+                    let displayValue = point.value + point.metric.displayOffset
                     LineMark(
                         x: .value("Day", point.date, unit: .day),
-                        y: .value("Score", point.value),
+                        y: .value("Score", displayValue),
                         series: .value("Metric", point.metric.rawValue)
                     )
                     .foregroundStyle(point.metric.color)
-                    .interpolationMethod(.catmullRom)
-                    .lineStyle(StrokeStyle(lineWidth: 4))
+                    .interpolationMethod(.monotone)
+                    .lineStyle(StrokeStyle(lineWidth: 6, lineCap: .round))
 
-                    PointMark(
-                        x: .value("Day", point.date, unit: .day),
-                        y: .value("Score", point.value)
-                    )
-                    .foregroundStyle(point.metric.color)
-                    .symbolSize(28)
+
                 }
                 .chartLegend(.hidden)
                 .chartYAxis(.hidden)
@@ -466,7 +471,7 @@ private struct BarometerRow: View {
             .frame(height: 20)
 
             Image(systemName: trend.systemImageName)
-                .font(.system(size: 14, weight: .semibold))
+                .font(.system(size: 18, weight: .semibold))
                 .foregroundStyle(metric.color)
                 .frame(width: 20, alignment: .trailing)
         }
