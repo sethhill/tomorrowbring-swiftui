@@ -354,6 +354,14 @@ private enum WellbeingMetric: String, CaseIterable {
         case .calm:   return -0.03
         }
     }
+
+    var zIndex: Double {
+        switch self {
+        case .mood:   return 2
+        case .energy: return 1
+        case .calm:   return 0
+        }
+    }
 }
 
 private struct WellbeingTrendChart: View {
@@ -400,6 +408,7 @@ private struct WellbeingTrendChart: View {
                     .foregroundStyle(point.metric.color)
                     .interpolationMethod(.monotone)
                     .lineStyle(StrokeStyle(lineWidth: 6, lineCap: .round))
+                    .zIndex(point.metric.zIndex)
 
 
                 }
