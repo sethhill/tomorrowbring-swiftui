@@ -104,7 +104,7 @@ struct DailyHeatmap: View {
     private var legend: some View {
         HStack(spacing: spacing) {
             Text("Less")
-                .font(.caption2)
+                .font(.appCaption2)
                 .foregroundStyle(.secondary)
             ForEach([0.12, 0.3, 0.5, 0.7, 1.0], id: \.self) { level in
                 RoundedRectangle(cornerRadius: 2)
@@ -112,7 +112,7 @@ struct DailyHeatmap: View {
                     .frame(width: 10, height: 10)
             }
             Text("More")
-                .font(.caption2)
+                .font(.appCaption2)
                 .foregroundStyle(.secondary)
         }
     }

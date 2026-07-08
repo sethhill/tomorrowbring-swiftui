@@ -24,6 +24,12 @@ final class AppLock {
     private var isAuthenticating = false
     private var autoLockTask: Task<Void, Never>?
 
+    /// Resets the idle timer, deferring auto-lock. Call on any user interaction.
+    func resetIdleTimer() {
+        guard isUnlocked else { return }
+        scheduleAutoLock()
+    }
+
     /// Locks the app, requiring authentication before content is shown again.
     func lock() {
         autoLockTask?.cancel()

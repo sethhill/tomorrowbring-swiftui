@@ -44,6 +44,7 @@ enum AppSection: String, CaseIterable, Identifiable {
 /// Root view: a NavigationStack behind a full-screen menu overlay.
 /// Section state lives here so the menu can switch sections.
 struct ContentView: View {
+    @Environment(AppLock.self) private var lock
     @State private var currentSection: AppSection
     @State private var showMenu = false
 
@@ -78,6 +79,12 @@ struct ContentView: View {
             }
         }
         .animation(.easeInOut(duration: 0.25), value: showMenu)
+        // Reset the idle timer on any touch so the app doesn't lock during active use.
+        .simultaneousGesture(
+            DragGesture(minimumDistance: 0)
+                .onChanged { _ in lock.resetIdleTimer() }
+        )
+        .onChange(of: currentSection) { lock.resetIdleTimer() }
     }
 
     @ViewBuilder
