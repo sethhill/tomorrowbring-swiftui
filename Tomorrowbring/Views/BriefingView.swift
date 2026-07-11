@@ -34,12 +34,12 @@ private struct CachedCard: Codable {
     init(_ card: BriefingCard) {
         title = card.title
         message = card.message
-        themeRaw = (card.theme ?? .thc).rawValue
+        themeRaw = (card.theme ?? .substances).rawValue
     }
 
     /// Rebuilds a display card, restoring its icon and tint from the theme.
     var card: BriefingCard {
-        let theme = BriefingTheme(rawValue: themeRaw) ?? .thc
+        let theme = BriefingTheme(rawValue: themeRaw) ?? .substances
         return BriefingCard(
             title: title,
             message: message,
@@ -354,11 +354,8 @@ extension BriefingView {
             wellbeingCard(timeOfDay: timeOfDay, energyAnswer: s.energyAnswer),
             movementCard(timeOfDay: timeOfDay, workoutsThisWeek: s.workoutsThisWeek, daysSinceLastWorkout: s.daysSinceLastWorkout)
         ]
-        if trackedSubstances.contains(.thc) {
-            cards.append(thcCard(timeOfDay: timeOfDay, thisWeek: s.thcThisWeek, goalMode: s.thcGoalMode, weeklyLimit: s.thcWeeklyLimit))
-        }
-        if trackedSubstances.contains(.alcohol) {
-            cards.append(alcoholCard(timeOfDay: timeOfDay, thisWeek: s.alcoholThisWeek, goalMode: s.alcoholGoalMode, weeklyLimit: s.alcoholWeeklyLimit))
+        if !trackedSubstances.isEmpty {
+            cards.append(substancesCard(timeOfDay: timeOfDay, signals: s, trackedSubstances: trackedSubstances))
         }
         return cards
     }
@@ -415,81 +412,77 @@ extension BriefingView {
         return BriefingCard(title: title, message: message, icon: "figure.walk", tint: .brandGold)
     }
 
-    private static func thcCard(
+    private static func substancesCard(
         timeOfDay: TimeOfDay,
-        thisWeek: Double,
-        goalMode: SubstanceGoalMode,
-        weeklyLimit: Double?
+        signals s: Signals,
+        trackedSubstances: Set<SubstanceKind>
     ) -> BriefingCard {
-        let (title, message): (String, String)
-        switch goalMode {
-        case .elimination:
-            if thisWeek > 0 {
-                (title, message) = (
-                    "Today is the reset",
-                    "If things didn't go the way you planned, today is the reset — not a setback. Urges tend to cluster for a day or two after a slip; notice when the pull starts building and name what's actually underneath it before acting on it. That pause is where the real choice lives."
-                )
-            } else {
-                let anchor = switch timeOfDay {
-                case .morning: "The morning is when the pull is usually at its quietest — notice the sharpness and carry it forward into the day."
-                case .afternoon: "The afternoon dip is when the case for using tends to start forming quietly — naming it early takes most of its power away."
-                case .evening: "The evening is when the pull tends to peak; cravings crest and fade in fifteen to twenty minutes if you give them room to pass."
-                }
-                (title, message) = (
-                    "Building something real",
-                    "Each day that goes this way adds to a clearer baseline — not just a streak, but actual signal about how you feel when things are clean. \(anchor) Decide how you want to handle the next few hours before the pull starts making its case."
-                )
-            }
-        case .reduction, .targeted:
-            if let limit = weeklyLimit, limit > 0, thisWeek / limit >= 0.8 {
-                (title, message) = (
-                    "Stay ahead of the math",
-                    "You're close to your weekly range with time still to go — that tends to get tighter than expected. The useful framing isn't restriction; it's what staying within it makes possible for the rest of the week. Notice whether the next one is a genuine choice or just the habit of the hour."
-                )
-            } else {
-                (title, message) = (
-                    "Notice where the habit is",
-                    "You're within your weekly range and the pattern is holding. The most useful thing to watch for is the point where habit takes over from choice — that's when it's worth slowing down and checking whether you actually want this one. The awareness itself tends to change the decision."
-                )
-            }
-        case .trackingOnly, .notTracking:
-            (title, message) = (
-                "Bank the clear morning",
-                "The morning is when the pull toward cannabis is at its quietest — notice the sharpness and the absence of fog. Let that feeling be the argument for tonight rather than a rule you're forcing on yourself. Carry it forward."
+        let thcTracked = trackedSubstances.contains(.thc)
+        let alcoholTracked = trackedSubstances.contains(.alcohol)
+        let icon = BriefingTheme.substances.icon
+        let tint = BriefingTheme.substances.tint
+
+        // THC elimination + recent use — most urgent, act now
+        if thcTracked && s.thcGoalMode == .elimination && s.thcThisWeek > 0 {
+            return BriefingCard(
+                title: "Today is the reset",
+                message: "If things didn't go the way you planned, today is the reset — not a setback. Urges tend to cluster for a day or two after a slip; notice when the pull starts building and name what's actually underneath it before acting on it. That pause is where the real choice lives.",
+                icon: icon, tint: tint
             )
         }
-        return BriefingCard(title: title, message: message, icon: "leaf.fill", tint: .brandGreen)
-    }
 
-    private static func alcoholCard(
-        timeOfDay: TimeOfDay,
-        thisWeek: Double,
-        goalMode: SubstanceGoalMode,
-        weeklyLimit: Double?
-    ) -> BriefingCard {
-        let (title, message): (String, String)
-        if let limit = weeklyLimit, limit > 0, thisWeek / limit >= 0.8 {
-            (title, message) = (
-                "Worth pausing tonight",
-                "You're close to your weekly limit and the week still has days left — that math tends to get tighter than it looks. The question tonight isn't about willpower; it's about what you'd rather wake up with tomorrow. Decide now, before the evening starts making the case for you."
+        // Near a targeted alcohol limit
+        if alcoholTracked, let limit = s.alcoholWeeklyLimit, limit > 0, s.alcoholThisWeek / limit >= 0.8 {
+            return BriefingCard(
+                title: "Worth pausing tonight",
+                message: "You're close to your weekly limit and the week still has days left — that math tends to get tighter than it looks. The question tonight isn't about willpower; it's about what you'd rather wake up with tomorrow. Decide now, before the evening starts making the case for you.",
+                icon: icon, tint: tint
             )
-        } else if thisWeek == 0 && goalMode != .trackingOnly {
+        }
+
+        // Near a targeted THC limit
+        if thcTracked, let limit = s.thcWeeklyLimit, limit > 0, s.thcThisWeek / limit >= 0.8 {
+            return BriefingCard(
+                title: "Stay ahead of the math",
+                message: "You're close to your weekly range with time still to go — that tends to get tighter than expected. The useful framing isn't restriction; it's what staying within it makes possible for the rest of the week. Notice whether the next one is a genuine choice or just the habit of the hour.",
+                icon: icon, tint: tint
+            )
+        }
+
+        // THC elimination + clean week
+        if thcTracked && s.thcGoalMode == .elimination {
+            let anchor = switch timeOfDay {
+            case .morning: "The morning is when the pull is usually at its quietest — notice the sharpness and carry it forward into the day."
+            case .afternoon: "The afternoon dip is when the case for using tends to start forming quietly — naming it early takes most of its power away."
+            case .evening: "The evening is when the pull tends to peak; cravings crest and fade in fifteen to twenty minutes if you give them room to pass."
+            }
+            return BriefingCard(
+                title: "Building something real",
+                message: "Each day that goes this way adds to a clearer baseline — not just a streak, but actual signal about how you feel when things are clean. \(anchor) Decide how you want to handle the next few hours before the pull starts making its case.",
+                icon: icon, tint: tint
+            )
+        }
+
+        // Alcohol — clean week with a directional goal
+        if alcoholTracked && s.alcoholThisWeek == 0 && s.alcoholGoalMode != .trackingOnly {
             let anchor = switch timeOfDay {
             case .morning: "The slate is clean — keep tonight's intention light and specific rather than a rule."
             case .afternoon: "Preview the evening choice now, before the pull starts making the case."
             case .evening: "Tonight's already going well; what you skip now is a morning that starts cleaner."
             }
-            (title, message) = (
-                "Nothing to manage yet",
-                "The week has been clean on drinks so far, and that gives you useful signal about how you've been feeling. \(anchor) Notice whether the difference shows up in sleep, energy, or how the mornings feel — that's the data worth carrying forward."
-            )
-        } else {
-            (title, message) = (
-                "Steady on the drinks",
-                "You're tracking within your range and the week has room. The useful thing isn't managing a number; it's deciding whether tonight actually calls for a drink or just the ritual of winding down. Those are different things, and knowing which one you're reaching for changes the decision."
+            return BriefingCard(
+                title: "Nothing to manage yet",
+                message: "The week has been clean on drinks so far, and that gives you useful signal about how you've been feeling. \(anchor) Notice whether the difference shows up in sleep, energy, or how the mornings feel — that's the data worth carrying forward.",
+                icon: icon, tint: tint
             )
         }
-        return BriefingCard(title: title, message: message, icon: "wineglass.fill", tint: .brandOrange)
+
+        // Default — tracking or within range
+        return BriefingCard(
+            title: "Notice where the choice is",
+            message: "You're tracking well and the patterns are visible. The most useful thing isn't managing a number — it's catching the moment where habit takes over from choice. That's when it's worth slowing down and checking whether you actually want this one, or just the ritual of it. The awareness itself tends to change the decision.",
+            icon: icon, tint: tint
+        )
     }
 }
 

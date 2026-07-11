@@ -14,24 +14,21 @@ import FoundationModels
 enum BriefingTheme: String, CaseIterable {
     case wellbeing
     case movement
-    case thc
-    case alcohol
+    case substances
 
     var icon: String {
         switch self {
-        case .wellbeing: return "heart.fill"
-        case .movement:  return "figure.walk"
-        case .thc:       return "leaf.fill"
-        case .alcohol:   return "wineglass.fill"
+        case .wellbeing:   return "heart.fill"
+        case .movement:    return "figure.walk"
+        case .substances:  return "wineglass.fill"
         }
     }
 
     var tint: Color {
         switch self {
-        case .wellbeing: return .brandGreen
-        case .movement:  return .brandGold
-        case .thc:       return .brandGreen
-        case .alcohol:   return .brandOrange
+        case .wellbeing:   return .brandGreen
+        case .movement:    return .brandGold
+        case .substances:  return .brandOrange
         }
     }
 
@@ -46,15 +43,13 @@ enum BriefingTheme: String, CaseIterable {
             return "a specific, realistic movement suggestion matched to time of day — " +
                    "morning: move before the day fills up; afternoon: a break keeps momentum; " +
                    "evening: gentle, not intense. Lead with what to do, not what's been done."
-        case .thc:
-            return "cannabis urges and what might actually be driving them (fatigue, boredom, " +
-                   "frustration) — name the driver gently, suggest a concrete interrupt, " +
-                   "connect mindful use to something the person cares about beyond the goal."
-        case .alcohol:
-            return "tonight's alcohol intention and how it fits the week's pattern — " +
-                   "morning: clean slate, set a light intention; afternoon: preview the " +
-                   "evening choice before the pull starts; evening: what's gained by holding " +
-                   "back, not what's lost."
+        case .substances:
+            return "the person's relationship with whatever substances they're tracking today — " +
+                   "focus on urges and what's actually driving them (fatigue, boredom, habit), " +
+                   "then the decision point ahead. Morning: set a light intention; " +
+                   "afternoon: preview the choice before the pull starts; " +
+                   "evening: what's gained by pausing, not what's lost. " +
+                   "Address whichever substances appear in the context data. Never encourage use."
         }
     }
 }
@@ -75,7 +70,7 @@ struct GeneratedBriefingCard {
     var sentence3: String
 }
 
-/// Container that generates all four cards in a single model call so the model
+/// Container that generates all three cards in a single model call so the model
 /// can vary language, angle, and metaphor across them naturally.
 @Generable
 struct AllBriefingCards {
@@ -85,11 +80,8 @@ struct AllBriefingCards {
     @Guide(description: "Movement card — a specific, time-of-day-appropriate activity suggestion.")
     var movement: GeneratedBriefingCard
 
-    @Guide(description: "THC/cannabis card — urges, their real driver, and how to navigate them today.")
-    var thc: GeneratedBriefingCard
-
-    @Guide(description: "Alcohol card — tonight's intention and its connection to the week's pattern.")
-    var alcohol: GeneratedBriefingCard
+    @Guide(description: "Substances card — urges, their real driver, and the decision point ahead. Address whichever substances (THC and/or alcohol) appear in the context. Never encourage use.")
+    var substances: GeneratedBriefingCard
 }
 
 private func capitalizeFirst(_ s: String) -> String {
@@ -131,8 +123,7 @@ struct BriefingGenerator {
         STRICT LANES — each card draws only from its own data. Do not cross-reference:
         - Wellbeing card: only check-in responses (energy, mood, stress). Ignore substance amounts and movement.
         - Movement card: only movement history. Ignore substances and wellbeing scores.
-        - THC card: only THC patterns. Ignore alcohol amounts, movement data, and wellbeing scores.
-        - Alcohol card: only alcohol patterns. Ignore THC, movement data, and wellbeing scores.
+        - Substances card: only substance patterns (THC and/or alcohol, whichever appear in the data). Ignore movement data and wellbeing scores.
 
         NO INVENTED LIMITS: Never mention a weekly limit, quota, or cap unless the context \
         explicitly states one with a number. If the goal is tracking-only or reduction, \
@@ -155,7 +146,7 @@ struct BriefingGenerator {
         CONTENT: Lead with action, not the metric. Never frame anything as a shortfall. \
         Treat check-in answers as lived experience, not labels to echo back.
 
-        DISTINCTNESS: The four cards must feel clearly different — different angles, structures, metaphors. \
+        DISTINCTNESS: All cards must feel clearly different — different angles, structures, metaphors. \
         No phrase or idea should recur across cards.
 
         FORMAT: Every sentence field is exactly one complete sentence — no fragments, no run-ons.
@@ -165,13 +156,12 @@ struct BriefingGenerator {
         Time of day: \(timeOfDay.promptName).
         About the person right now: \(context)
 
-        Write four briefing cards. Each must stay strictly within its assigned data lane \
-        and use different language from the other three.
+        Write three briefing cards. Each must stay strictly within its assigned data lane \
+        and use different language from the others.
 
         Wellbeing card focus: \(BriefingTheme.wellbeing.focus)
         Movement card focus: \(BriefingTheme.movement.focus)
-        THC card focus: \(BriefingTheme.thc.focus)
-        Alcohol card focus: \(BriefingTheme.alcohol.focus)
+        Substances card focus: \(BriefingTheme.substances.focus)
         """
 
         let session = LanguageModelSession(instructions: instructions)
@@ -186,8 +176,9 @@ struct BriefingGenerator {
                 makeCard(all.wellbeing, theme: .wellbeing),
                 makeCard(all.movement, theme: .movement)
             ]
-            if trackedSubstances.contains(.thc) { cards.append(makeCard(all.thc, theme: .thc)) }
-            if trackedSubstances.contains(.alcohol) { cards.append(makeCard(all.alcohol, theme: .alcohol)) }
+            if !trackedSubstances.isEmpty {
+                cards.append(makeCard(all.substances, theme: .substances))
+            }
             return cards
         } catch {
             return nil
