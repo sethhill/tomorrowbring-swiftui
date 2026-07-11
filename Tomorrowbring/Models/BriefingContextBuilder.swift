@@ -19,6 +19,7 @@ struct BriefingContextBuilder {
     func build(now: Date = .now) -> String {
         let calendar = Calendar.current
         let parts = [
+            movementSummary(now: now, calendar: calendar),
             substanceSummary(now: now, calendar: calendar),
             wellbeingSummary(now: now, calendar: calendar),
             checkInSummary(now: now, calendar: calendar)
@@ -28,6 +29,63 @@ struct BriefingContextBuilder {
             return "They haven't logged anything yet, so keep the guidance general, warm, and encouraging."
         }
         return parts.joined(separator: " ")
+    }
+
+    // MARK: - Movement
+
+    private func movementSummary(now: Date, calendar: Calendar) -> String? {
+        let descriptor = FetchDescriptor<MovementEntry>(
+            sortBy: [SortDescriptor(\.date, order: .reverse)]
+        )
+        let entries = (try? modelContext.fetch(descriptor)) ?? []
+        guard !entries.isEmpty else { return nil }
+
+        let weekAgo = calendar.date(byAdding: .day, value: -7, to: now) ?? now
+        let twoWeeksAgo = calendar.date(byAdding: .day, value: -14, to: now) ?? now
+        let thisWeek = entries.filter { $0.date >= weekAgo }
+        let priorWeek = entries.filter { $0.date >= twoWeeksAgo && $0.date < weekAgo }
+        let thisMinutes = Int(thisWeek.reduce(0) { $0 + $1.durationMinutes })
+        let priorMinutes = Int(priorWeek.reduce(0) { $0 + $1.durationMinutes })
+
+        let trend: String
+        if priorMinutes == 0 {
+            trend = ""
+        } else if thisMinutes < Int(Double(priorMinutes) * 0.9) {
+            trend = ", down from \(priorMinutes) min the week before"
+        } else if thisMinutes > Int(Double(priorMinutes) * 1.1) {
+            trend = ", up from \(priorMinutes) min the week before"
+        } else {
+            trend = ", about the same as the week before"
+        }
+
+        let daysSince: String
+        if let latest = entries.first {
+            let days = calendar.dateComponents(
+                [.day],
+                from: calendar.startOfDay(for: latest.date),
+                to: calendar.startOfDay(for: now)
+            ).day ?? 0
+            daysSince = switch days {
+            case 0: " Last session today."
+            case 1: " Last session yesterday."
+            default: " Last session \(days) days ago."
+            }
+        } else {
+            daysSince = ""
+        }
+
+        let goal = MovementGoal.load()
+        var line = "Movement goal: \(goal.mode.coachingNote)."
+        if !thisWeek.isEmpty {
+            line += " \(thisWeek.count) workouts this week (\(thisMinutes) min\(trend)).\(daysSince)"
+        } else if !priorWeek.isEmpty {
+            line += " No workouts logged this week (\(priorMinutes) min last week).\(daysSince)"
+        }
+        if goal.mode == .targeted, let target = goal.weeklySessionTarget {
+            let remaining = max(0, target - thisWeek.count)
+            line += " Target: \(target)/week, \(remaining) remaining."
+        }
+        return line
     }
 
     // MARK: - Substances

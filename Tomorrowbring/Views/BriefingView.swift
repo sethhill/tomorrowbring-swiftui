@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import SwiftData
 
 /// A single coaching card in the briefing: a short headline plus a paragraph.
 struct BriefingCard: Identifiable {
@@ -106,8 +107,8 @@ struct BriefingView: View {
             switch self {
             case .idle: return nil
             case .onDevice: return "Generated on-device with Apple Intelligence."
-            case .fellBackUnavailable: return "Showing sample content — Apple Intelligence is unavailable on this device."
-            case .fellBackDeclined: return "Showing sample content — the on-device model declined to generate."
+            case .fellBackUnavailable: return "Showing programmatic content—Apple Intelligence is unavailable on this device."
+            case .fellBackDeclined: return "Showing programmatic content—the on-device model declined to generate."
             }
         }
     }
@@ -170,7 +171,7 @@ struct BriefingView: View {
             }
         }
         .task {
-            if cards.isEmpty { cards = BriefingView.cards(for: timeOfDay) }
+            if cards.isEmpty { cards = BriefingView.contextualCards(for: timeOfDay, modelContext: modelContext) }
             await generate()
         }
     }
@@ -205,7 +206,7 @@ struct BriefingView: View {
             status = .onDevice
             saveCache(generated)
         } else {
-            cards = BriefingView.cards(for: timeOfDay)
+            cards = BriefingView.contextualCards(for: timeOfDay, modelContext: modelContext)
             status = available ? .fellBackDeclined : .fellBackUnavailable
         }
     }
@@ -266,98 +267,202 @@ struct BriefingView: View {
     }
 }
 
-// MARK: - Placeholder content (replaced by AI generation later)
+// MARK: - Contextual fallback cards
 
 extension BriefingView {
-    /// Themed coaching cards for the given time of day. Placeholder copy for now.
-    static func cards(for timeOfDay: TimeOfDay) -> [BriefingCard] {
-        switch timeOfDay {
-        case .morning: return morningCards
-        case .afternoon: return afternoonCards
-        case .evening: return eveningCards
+
+    /// Signals extracted from local data, used to select appropriate fallback copy.
+    private struct Signals {
+        var energyAnswer: String?
+        var workoutsThisWeek: Int
+        var daysSinceLastWorkout: Int?
+        var thcThisWeek: Double
+        var thcGoalMode: SubstanceGoalMode
+        var thcWeeklyLimit: Double?
+        var alcoholThisWeek: Double
+        var alcoholGoalMode: SubstanceGoalMode
+        var alcoholWeeklyLimit: Double?
+
+        init(modelContext: ModelContext, now: Date = .now) {
+            let calendar = Calendar.current
+            let weekAgo = calendar.date(byAdding: .day, value: -7, to: now) ?? now
+
+            var ciDesc = FetchDescriptor<CheckInEntry>(
+                sortBy: [SortDescriptor(\.timestamp, order: .reverse)]
+            )
+            ciDesc.fetchLimit = 1
+            energyAnswer = (try? modelContext.fetch(ciDesc))?.first?.responses
+                .first(where: { $0.prompt.lowercased().contains("your energy") })?.answer
+
+            let movements = (try? modelContext.fetch(
+                FetchDescriptor<MovementEntry>(sortBy: [SortDescriptor(\.date, order: .reverse)])
+            )) ?? []
+            let thisWeekMoves = movements.filter { $0.date >= weekAgo }
+            workoutsThisWeek = thisWeekMoves.count
+            if let latest = movements.first {
+                daysSinceLastWorkout = calendar.dateComponents(
+                    [.day],
+                    from: calendar.startOfDay(for: latest.date),
+                    to: calendar.startOfDay(for: now)
+                ).day
+            } else {
+                daysSinceLastWorkout = nil
+            }
+
+            let allLogs = (try? modelContext.fetch(FetchDescriptor<SubstanceLog>())) ?? []
+            thcThisWeek = allLogs.filter { $0.kind == .thc && $0.timestamp >= weekAgo }
+                .reduce(0) { $0 + $1.amount }
+            let thcGoal = SubstanceGoal.load(for: .thc)
+            thcGoalMode = thcGoal.mode
+            thcWeeklyLimit = thcGoal.weeklyLimit
+
+            alcoholThisWeek = allLogs.filter { $0.kind == .alcohol && $0.timestamp >= weekAgo }
+                .reduce(0) { $0 + $1.amount }
+            let alcoholGoal = SubstanceGoal.load(for: .alcohol)
+            alcoholGoalMode = alcoholGoal.mode
+            alcoholWeeklyLimit = alcoholGoal.weeklyLimit
         }
     }
 
-    private static let morningCards: [BriefingCard] = [
-        BriefingCard(
-            title: "Read the morning",
-            message: "Your check-in gives you a starting point — use it to set the tone rather than just react to the day. Notice where your energy actually is, not where you think it should be. That honest read is the best tool you have for the next few hours.",
-            icon: "heart.fill",
-            tint: .brandGreen
-        ),
-        BriefingCard(
-            title: "Move before the day fills up",
-            message: "The morning window is the one that closes fastest — once the day gets going, movement gets pushed. Even ten easy minutes now keeps the streak alive and shifts the morning in a direction you'll feel later. Steadiness beats intensity every time.",
-            icon: "figure.walk",
-            tint: .brandGold
-        ),
-        BriefingCard(
-            title: "Bank the clear morning",
-            message: "The morning is when the pull toward THC is at its quietest — notice the sharpness and the absence of fog. Let that feeling be the argument for tonight rather than a rule you're forcing on yourself. Carry it forward.",
-            icon: "leaf.fill",
-            tint: .brandGreen
-        ),
-        BriefingCard(
-            title: "Nothing to manage yet",
-            message: "The day is a blank slate — no decisions to make and no streak to defend. Keep it that way by not deciding anything now; the real choice lives in the evening. Bank the calm of a morning that doesn't owe anything to last night.",
-            icon: "wineglass.fill",
-            tint: .brandOrange
-        )
-    ]
+    /// Generates fallback cards using local data signals when Apple Intelligence is unavailable.
+    static func contextualCards(for timeOfDay: TimeOfDay, modelContext: ModelContext) -> [BriefingCard] {
+        let s = Signals(modelContext: modelContext)
+        return [
+            wellbeingCard(timeOfDay: timeOfDay, energyAnswer: s.energyAnswer),
+            movementCard(timeOfDay: timeOfDay, workoutsThisWeek: s.workoutsThisWeek, daysSinceLastWorkout: s.daysSinceLastWorkout),
+            thcCard(timeOfDay: timeOfDay, thisWeek: s.thcThisWeek, goalMode: s.thcGoalMode, weeklyLimit: s.thcWeeklyLimit),
+            alcoholCard(timeOfDay: timeOfDay, thisWeek: s.alcoholThisWeek, goalMode: s.alcoholGoalMode, weeklyLimit: s.alcoholWeeklyLimit)
+        ]
+    }
 
-    private static let afternoonCards: [BriefingCard] = [
-        BriefingCard(
-            title: "Check in with yourself",
-            message: "Mid-afternoon is a good moment to notice what's shifted since this morning — energy, mood, tension. You don't need to fix anything, just name it. Awareness is usually enough to keep the afternoon from quietly going sideways.",
-            icon: "heart.fill",
-            tint: .brandGreen
-        ),
-        BriefingCard(
-            title: "A little still counts",
-            message: "The afternoon still has room for a few easy minutes — movement doesn't have to be all-or-nothing. Even a short loop or some stretching keeps the streak intact and breaks up the sitting. Momentum is the goal, and small counts.",
-            icon: "figure.walk",
-            tint: .brandGold
-        ),
-        BriefingCard(
-            title: "Ride out the afternoon dip",
-            message: "The mid-afternoon lull is a sneaky one — the reach for something to take the edge off is usually energy talking, not real craving. Name it for what it is before you act on it, and more often than not it loosens its grip on its own.",
-            icon: "leaf.fill",
-            tint: .brandGreen
-        ),
-        BriefingCard(
-            title: "Stay ahead of the evening",
-            message: "The afternoon is a good time to picture how you want tonight to go, before the pull starts making the case for you. If you decide now that tonight leans toward tea and an early wind-down, the choice is already half made.",
-            icon: "wineglass.fill",
-            tint: .brandOrange
-        )
-    ]
+    private static func wellbeingCard(timeOfDay: TimeOfDay, energyAnswer: String?) -> BriefingCard {
+        let (title, message): (String, String) = switch energyAnswer {
+        case "Great", "Good":
+            ("Make the most of it",
+             "You're coming in with real energy — that's a resource worth steering, not spending. Notice where it goes in the first couple of hours, because that window tends to set the tone for everything that follows. Point it at the thing that calls for actual focus.")
+        case "Low", "Drained":
+            ("Work with what you have",
+             "Your energy is running lean today, and that's honest data worth taking seriously. The instinct to push through tends to cost more than it returns. Give yourself a narrower scope than usual and protect whatever capacity you have rather than trying to manufacture more.")
+        default:
+            ("Read the morning",
+             "Your check-in gives you a starting point — use it to set the tone rather than just react to the day. Notice where your energy actually is, not where you think it should be. That honest read is the best tool you have for the next few hours.")
+        }
+        return BriefingCard(title: title, message: message, icon: "heart.fill", tint: .brandGreen)
+    }
 
-    private static let eveningCards: [BriefingCard] = [
-        BriefingCard(
-            title: "Wind down intentionally",
-            message: "How the evening goes is largely determined by what you do in the next hour — not the last one. Notice where you're holding tension and give it somewhere to go: a walk, a stretch, something quiet. The morning version of you starts here.",
-            icon: "heart.fill",
-            tint: .brandGreen
-        ),
-        BriefingCard(
-            title: "Keep the streak going",
-            message: "Consistency is doing the real work here, even when the sessions are short. A little gentle movement at home or some stretching keeps the momentum alive without overdoing it. Steady effort, lighter evenings, decent sleep.",
-            icon: "figure.walk",
-            tint: .brandGold
-        ),
-        BriefingCard(
-            title: "Outlast the evening call",
-            message: "The pull usually crests and fades inside fifteen or twenty minutes — you don't have to fight it, just outlast it. Before you reach, ask what's actually underneath it: fatigue, restlessness, or just the habit of the hour.",
-            icon: "leaf.fill",
-            tint: .brandGreen
-        ),
-        BriefingCard(
-            title: "You're steady on the drinks",
-            message: "No need to white-knuckle anything here — if the evening wants a ritual, let it be tea or a show rather than a pour. Every night you skip is a morning where you wake up ready instead of foggy.",
-            icon: "wineglass.fill",
-            tint: .brandOrange
-        )
-    ]
+    private static func movementCard(
+        timeOfDay: TimeOfDay,
+        workoutsThisWeek: Int,
+        daysSinceLastWorkout: Int?
+    ) -> BriefingCard {
+        let (title, message): (String, String)
+        if let days = daysSinceLastWorkout, days >= 3 {
+            (title, message) = (
+                "Reset the clock",
+                "It's been a few days since your last session, and the useful goal is closing the gap rather than making up for it. A short reset today — even ten or fifteen minutes — ends the pause and gives you something to build from. The size of the session doesn't matter nearly as much as the fact of it."
+            )
+        } else if workoutsThisWeek >= 3 {
+            (title, message) = (
+                "Momentum is doing its work",
+                "You've been showing up consistently this week, and that's the habit working. The useful question now isn't whether to go again but whether to add time or protect the frequency — either lever is valid, so pick the one the day actually has room for."
+            )
+        } else if workoutsThisWeek > 0 {
+            (title, message) = (
+                "Keep the thread going",
+                "You've got some movement in this week and the thread is alive. Keeping it going matters more than the size of the next session — even a short one extends the pattern and gives you something to build on. Steadiness beats intensity when the goal is making this a habit."
+            )
+        } else {
+            (title, message) = switch timeOfDay {
+            case .morning:
+                ("Move before the day fills up",
+                 "The morning window is the one that closes fastest — once the day gets going, movement gets pushed. Even ten easy minutes now keeps momentum alive and shifts the morning in a direction you'll feel later. Steadiness beats intensity every time.")
+            case .afternoon:
+                ("A little still counts",
+                 "The afternoon still has room for a few easy minutes — movement doesn't have to be all-or-nothing. Even a short loop or some stretching keeps things alive and breaks up the sitting. Momentum is the goal, and small counts.")
+            case .evening:
+                ("Keep the streak going",
+                 "Consistency is doing the real work here, even when the sessions are short. A little gentle movement at home or some stretching keeps the momentum alive without overdoing it. Steady effort, lighter evenings, decent sleep.")
+            }
+        }
+        return BriefingCard(title: title, message: message, icon: "figure.walk", tint: .brandGold)
+    }
+
+    private static func thcCard(
+        timeOfDay: TimeOfDay,
+        thisWeek: Double,
+        goalMode: SubstanceGoalMode,
+        weeklyLimit: Double?
+    ) -> BriefingCard {
+        let (title, message): (String, String)
+        switch goalMode {
+        case .elimination:
+            if thisWeek > 0 {
+                (title, message) = (
+                    "Today is the reset",
+                    "If things didn't go the way you planned, today is the reset — not a setback. Urges tend to cluster for a day or two after a slip; notice when the pull starts building and name what's actually underneath it before acting on it. That pause is where the real choice lives."
+                )
+            } else {
+                let anchor = switch timeOfDay {
+                case .morning: "The morning is when the pull is usually at its quietest — notice the sharpness and carry it forward into the day."
+                case .afternoon: "The afternoon dip is when the case for using tends to start forming quietly — naming it early takes most of its power away."
+                case .evening: "The evening is when the pull tends to peak; cravings crest and fade in fifteen to twenty minutes if you give them room to pass."
+                }
+                (title, message) = (
+                    "Building something real",
+                    "Each day that goes this way adds to a clearer baseline — not just a streak, but actual signal about how you feel when things are clean. \(anchor) Decide how you want to handle the next few hours before the pull starts making its case."
+                )
+            }
+        case .reduction, .targeted:
+            if let limit = weeklyLimit, limit > 0, thisWeek / limit >= 0.8 {
+                (title, message) = (
+                    "Stay ahead of the math",
+                    "You're close to your weekly range with time still to go — that tends to get tighter than expected. The useful framing isn't restriction; it's what staying within it makes possible for the rest of the week. Notice whether the next one is a genuine choice or just the habit of the hour."
+                )
+            } else {
+                (title, message) = (
+                    "Notice where the habit is",
+                    "You're within your weekly range and the pattern is holding. The most useful thing to watch for is the point where habit takes over from choice — that's when it's worth slowing down and checking whether you actually want this one. The awareness itself tends to change the decision."
+                )
+            }
+        case .trackingOnly:
+            (title, message) = (
+                "Bank the clear morning",
+                "The morning is when the pull toward cannabis is at its quietest — notice the sharpness and the absence of fog. Let that feeling be the argument for tonight rather than a rule you're forcing on yourself. Carry it forward."
+            )
+        }
+        return BriefingCard(title: title, message: message, icon: "leaf.fill", tint: .brandGreen)
+    }
+
+    private static func alcoholCard(
+        timeOfDay: TimeOfDay,
+        thisWeek: Double,
+        goalMode: SubstanceGoalMode,
+        weeklyLimit: Double?
+    ) -> BriefingCard {
+        let (title, message): (String, String)
+        if let limit = weeklyLimit, limit > 0, thisWeek / limit >= 0.8 {
+            (title, message) = (
+                "Worth pausing tonight",
+                "You're close to your weekly limit and the week still has days left — that math tends to get tighter than it looks. The question tonight isn't about willpower; it's about what you'd rather wake up with tomorrow. Decide now, before the evening starts making the case for you."
+            )
+        } else if thisWeek == 0 && goalMode != .trackingOnly {
+            let anchor = switch timeOfDay {
+            case .morning: "The slate is clean — keep tonight's intention light and specific rather than a rule."
+            case .afternoon: "Preview the evening choice now, before the pull starts making the case."
+            case .evening: "Tonight's already going well; what you skip now is a morning that starts cleaner."
+            }
+            (title, message) = (
+                "Nothing to manage yet",
+                "The week has been clean on drinks so far, and that gives you useful signal about how you've been feeling. \(anchor) Notice whether the difference shows up in sleep, energy, or how the mornings feel — that's the data worth carrying forward."
+            )
+        } else {
+            (title, message) = (
+                "Steady on the drinks",
+                "You're tracking within your range and the week has room. The useful thing isn't managing a number; it's deciding whether tonight actually calls for a drink or just the ritual of winding down. Those are different things, and knowing which one you're reaching for changes the decision."
+            )
+        }
+        return BriefingCard(title: title, message: message, icon: "wineglass.fill", tint: .brandOrange)
+    }
 }
 
 /// A single briefing coaching card: a headline, then the paragraph.
