@@ -142,14 +142,20 @@ struct BriefingView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
                 header
-                ForEach(cards) { card in
-                    BriefingCardView(card: card)
-                }
-                if let note = status.note {
-                    Text(note)
-                        .font(.appCaption)
-                        .foregroundStyle(.secondary)
-                        .padding(.top, 4)
+                if isGenerating && cards.isEmpty {
+                    ProgressView()
+                        .frame(maxWidth: .infinity)
+                        .padding(.top, 60)
+                } else {
+                    ForEach(cards) { card in
+                        BriefingCardView(card: card)
+                    }
+                    if let note = status.note {
+                        Text(note)
+                            .font(.appCaption)
+                            .foregroundStyle(.secondary)
+                            .padding(.top, 4)
+                    }
                 }
             }
             .padding()
@@ -171,7 +177,6 @@ struct BriefingView: View {
             }
         }
         .task {
-            if cards.isEmpty { cards = BriefingView.contextualCards(for: timeOfDay, modelContext: modelContext) }
             await generate()
         }
     }
@@ -202,12 +207,16 @@ struct BriefingView: View {
             await generator.generateCards(for: timeOfDay, context: context)
         }
         if let generated {
-            cards = generated
-            status = .onDevice
+            withAnimation(.easeInOut(duration: 0.5)) {
+                cards = generated
+                status = .onDevice
+            }
             saveCache(generated)
         } else {
-            cards = BriefingView.contextualCards(for: timeOfDay, modelContext: modelContext)
-            status = available ? .fellBackDeclined : .fellBackUnavailable
+            withAnimation(.easeInOut(duration: 0.5)) {
+                cards = BriefingView.contextualCards(for: timeOfDay, modelContext: modelContext)
+                status = available ? .fellBackDeclined : .fellBackUnavailable
+            }
         }
     }
 
@@ -255,7 +264,7 @@ struct BriefingView: View {
                 Text(timeOfDay.greeting)
                     .font(.appLargeTitleSemibold)
                     .foregroundStyle(.brandGreen)
-                if isGenerating {
+                if isGenerating && !cards.isEmpty {
                     ProgressView()
                         .controlSize(.small)
                 }
@@ -483,9 +492,18 @@ private struct BriefingCardView: View {
 }
 
 private extension String {
+    // Acronyms the model may emit in any case — always restore to all-caps.
+    private static let knownAcronyms: Set<String> = ["thc", "ai", "cbd"]
+
     var sentenceCased: String {
-        guard let first = first else { return self }
-        return first.uppercased() + dropFirst().lowercased()
+        guard !isEmpty else { return self }
+        return components(separatedBy: " ").enumerated().map { index, word in
+            if Self.knownAcronyms.contains(word.lowercased()) { return word.uppercased() }
+            let isAcronym = word.count > 1 && word == word.uppercased() && word.allSatisfy(\.isLetter)
+            if isAcronym { return word }
+            let lower = word.lowercased()
+            return index == 0 ? lower.prefix(1).uppercased() + lower.dropFirst() : lower
+        }.joined(separator: " ")
     }
 }
 

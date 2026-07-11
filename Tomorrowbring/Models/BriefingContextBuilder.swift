@@ -102,10 +102,14 @@ struct BriefingContextBuilder {
                 .reduce(0) { $0 + $1.amount }
         }
 
+        let todayStart = calendar.startOfDay(for: now)
+        let tomorrow = calendar.date(byAdding: .day, value: 1, to: todayStart) ?? now
+
         var lines: [String] = []
         for kind in SubstanceKind.allCases {
             let thisWeek = total(kind, from: weekAgo, to: now)
             let priorWeek = total(kind, from: twoWeeksAgo, to: weekAgo)
+            let today = total(kind, from: todayStart, to: tomorrow)
             let goal = SubstanceGoal.load(for: kind)
 
             guard thisWeek > 0 || priorWeek > 0 || goal.mode != .trackingOnly else { continue }
@@ -114,16 +118,20 @@ struct BriefingContextBuilder {
             if priorWeek == 0 {
                 trend = ""
             } else if thisWeek < priorWeek * 0.9 {
-                trend = ", down from \(number(priorWeek)) \(kind.unit) the week before"
+                trend = ", down from \(number(priorWeek)) \(kind.unit) last week"
             } else if thisWeek > priorWeek * 1.1 {
-                trend = ", up from \(number(priorWeek)) \(kind.unit) the week before"
+                trend = ", up from \(number(priorWeek)) \(kind.unit) last week"
             } else {
-                trend = ", about the same as the week before"
+                trend = ", similar to last week"
             }
+
+            // Explicit today vs history — prevents the model from treating weekly
+            // totals as if they happened today.
+            let todayNote = today > 0 ? "\(number(today)) today" : "none today"
 
             var line = "\(kind.rawValue) goal: \(goal.mode.coachingNote)."
             if thisWeek > 0 || priorWeek > 0 {
-                line += " \(number(thisWeek)) \(kind.unit) this week\(trend)."
+                line += " \(number(thisWeek)) \(kind.unit) this week (\(todayNote))\(trend)."
             }
             if goal.mode == .targeted, let limit = goal.weeklyLimit {
                 let remaining = max(0, Int(limit) - Int(thisWeek))

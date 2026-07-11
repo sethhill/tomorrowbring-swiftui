@@ -25,9 +25,15 @@ struct WellbeingView: View {
     var body: some View {
         ScrollView(.vertical) {
             VStack(alignment: .leading, spacing: 24) {
-                Text("Wellbeing")
-                    .font(.appLargeTitleSemibold)
-                    .foregroundStyle(.brandGreen)
+                HStack(spacing: 10) {
+                    Text("Wellbeing")
+                        .font(.appLargeTitleSemibold)
+                        .foregroundStyle(.brandGreen)
+                    if isGeneratingInsight {
+                        ProgressView()
+                            .controlSize(.small)
+                    }
+                }
 
                 barometerSection
                 trendSection
@@ -180,14 +186,9 @@ struct WellbeingView: View {
 
     private var insightSection: some View {
         VStack(alignment: .leading, spacing: 16) {
-            VStack(alignment: .leading, spacing: 6) {
-                if isGeneratingInsight {
-                    ProgressView().controlSize(.small)
-                }
-                Text(condition)
-                    .font(.appBody)
-                    .foregroundStyle(.primary)
-            }
+            Text(condition)
+                .font(.appBody)
+                .foregroundStyle(.primary)
             Text(coaching)
                 .font(.appBody)
                 .foregroundStyle(.primary)
@@ -197,6 +198,8 @@ struct WellbeingView: View {
                     .foregroundStyle(.secondary)
             }
         }
+        .id(condition + coaching)
+        .transition(.opacity)
     }
 
     // MARK: - Insight generation
@@ -236,14 +239,18 @@ struct WellbeingView: View {
             await generator.generate(instructions: instructions, context: context)
         }
         if let insight {
-            condition = insight.condition
-            coaching = insight.coaching
-            insightIsAIGenerated = true
+            withAnimation(.easeInOut(duration: 0.5)) {
+                condition = insight.condition
+                coaching = insight.coaching
+                insightIsAIGenerated = true
+            }
             saveInsightCache(signature: signature, insight: insight)
         } else {
-            condition = Self.placeholderCondition
-            coaching = Self.placeholderCoaching
-            insightIsAIGenerated = false
+            withAnimation(.easeInOut(duration: 0.5)) {
+                condition = Self.placeholderCondition
+                coaching = Self.placeholderCoaching
+                insightIsAIGenerated = false
+            }
         }
     }
 

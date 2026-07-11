@@ -148,9 +148,15 @@ struct SubstanceTrackerView: View {
 
     private var summarySection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Past week")
-                .font(.appTitle3)
-                .foregroundStyle(.secondary)
+            HStack(spacing: 10) {
+                Text("Past week")
+                    .font(.appTitle3)
+                    .foregroundStyle(.secondary)
+                if isGeneratingInsight {
+                    ProgressView()
+                        .controlSize(.small)
+                }
+            }
             HStack(spacing: 12) {
                 statCard(
                     value: "\(Int(thisWeekLogs.reduce(0) { $0 + $1.amount }))",
@@ -210,14 +216,9 @@ struct SubstanceTrackerView: View {
 
     private var insightSection: some View {
         VStack(alignment: .leading, spacing: 16) {
-            VStack(alignment: .leading, spacing: 6) {
-                if isGeneratingInsight {
-                    ProgressView().controlSize(.small)
-                }
-                Text(condition)
-                    .font(.appBody)
-                    .foregroundStyle(.primary)
-            }
+            Text(condition)
+                .font(.appBody)
+                .foregroundStyle(.primary)
             Text(coaching)
                 .font(.appBody)
                 .foregroundStyle(.primary)
@@ -227,6 +228,8 @@ struct SubstanceTrackerView: View {
                     .foregroundStyle(.secondary)
             }
         }
+        .id(condition + coaching)
+        .transition(.opacity)
     }
 
     // MARK: - Recent
@@ -279,14 +282,18 @@ struct SubstanceTrackerView: View {
             await generator.generate(instructions: instructions, context: context)
         }
         if let insight {
-            condition = insight.condition
-            coaching = insight.coaching
-            insightIsAIGenerated = true
+            withAnimation(.easeInOut(duration: 0.5)) {
+                condition = insight.condition
+                coaching = insight.coaching
+                insightIsAIGenerated = true
+            }
             saveInsightCache(signature: signature, insight: insight)
         } else {
-            condition = Self.placeholderCondition
-            coaching = Self.placeholderCoaching
-            insightIsAIGenerated = false
+            withAnimation(.easeInOut(duration: 0.5)) {
+                condition = Self.placeholderCondition
+                coaching = Self.placeholderCoaching
+                insightIsAIGenerated = false
+            }
         }
     }
 

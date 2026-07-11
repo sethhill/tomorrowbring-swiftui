@@ -39,58 +39,57 @@ enum BriefingTheme: String, CaseIterable {
     var focus: String {
         switch self {
         case .wellbeing:
-            return """
-            the person's current wellbeing state — their energy, mood, and stress level from the \
-            most recent check-in. Translate the check-in answers to a felt experience, never echo \
-            the raw words back. Tailor to time of day: morning (what this state means for the day \
-            ahead — what to protect or lean into), afternoon (what the state signals mid-day and \
-            whether anything needs adjusting), evening (how the day's arc looked and how to wind \
-            down well given where things landed). Connect to something concrete they can feel or notice.
-            """
+            return "the person's energy, mood, and stress from the latest check-in — " +
+                   "translate to felt experience (no raw words), connect to something " +
+                   "they can concretely notice or protect today."
         case .movement:
-            return """
-            a specific, realistic movement suggestion. Tailor to time of day: morning (ideal window \
-            — move before the day fills up), afternoon (a break in the middle of the day keeps \
-            momentum alive), evening (gentle movement to wind down, not intensity). Lead with what \
-            to do, not what's been done.
-            """
+            return "a specific, realistic movement suggestion matched to time of day — " +
+                   "morning: move before the day fills up; afternoon: a break keeps momentum; " +
+                   "evening: gentle, not intense. Lead with what to do, not what's been done."
         case .thc:
-            return """
-            cannabis urges and what might actually be driving them right now — fatigue, frustration, \
-            hunger, or boredom. Name the real driver gently and suggest a physical or social interrupt. \
-            Tailor to time of day: morning (urges quiet — help set up the day), afternoon (craving \
-            forming in the background — surface what's driving it, name it so it gets smaller), evening \
-            (craving active — lean into grounding, ritual, and outlasting it; cravings peak and pass \
-            in 15–20 minutes). Connect mindful use to something the person cares about beyond the goal.
-            """
+            return "cannabis urges and what might actually be driving them (fatigue, boredom, " +
+                   "frustration) — name the driver gently, suggest a concrete interrupt, " +
+                   "connect mindful use to something the person cares about beyond the goal."
         case .alcohol:
-            return """
-            alcohol and how it interplays with THC urges. Tailor to time of day: morning (slate is \
-            clean — set a light, clear intention for tonight), afternoon (preview the evening choice \
-            before the pull starts), evening (what's gained by holding back; what skipping tonight \
-            makes possible tomorrow). When near a weekly limit, focus on what's gained, not what's \
-            remaining.
-            """
+            return "tonight's alcohol intention and how it fits the week's pattern — " +
+                   "morning: clean slate, set a light intention; afternoon: preview the " +
+                   "evening choice before the pull starts; evening: what's gained by holding " +
+                   "back, not what's lost. Near a limit: focus on what staying within it enables."
         }
     }
 }
 
-/// The structured shape we ask the on-device model to fill in for one card.
-/// Three separate sentence fields guarantee exactly 3 sentences — the model
-/// cannot stop early because every field must be populated.
+/// The structured shape for one briefing card.
 @Generable
 struct GeneratedBriefingCard {
-    @Guide(description: "3 to 5 words. A punchy, specific headline. Sentence case — first word capitalized, rest lowercase. No trailing period.")
+    @Guide(description: "3 to 5 words. Punchy, specific. Sentence case. No trailing period. No clichés.")
     var title: String
 
-    @Guide(description: "One sentence. The felt experience right now — what the data means for how this person feels, not what the numbers say. Second person. No numbers.")
+    @Guide(description: "One sentence. The felt experience right now — what this person's data means for how they actually feel, not a restatement of numbers or answers. Second person.")
     var sentence1: String
 
-    @Guide(description: "One sentence. The one thing to do or stay aware of today. Begin with an action word. Not a restatement of sentence 1.")
+    @Guide(description: "One sentence. The one concrete thing to do or notice today. Begin with an action verb. Distinctly different in content and phrasing from sentence 1.")
     var sentence2: String
 
-    @Guide(description: "One sentence. Why this matters beyond the goal — what it protects, enables, or connects to in their life.")
+    @Guide(description: "One sentence. A specific consequence, shift, or observation that deepens the advice — not a generic 'why it matters' statement. Must add something new, not restate sentences 1 or 2.")
     var sentence3: String
+}
+
+/// Container that generates all four cards in a single model call so the model
+/// can vary language, angle, and metaphor across them naturally.
+@Generable
+struct AllBriefingCards {
+    @Guide(description: "Wellbeing card — energy, mood, and stress translated to felt experience.")
+    var wellbeing: GeneratedBriefingCard
+
+    @Guide(description: "Movement card — a specific, time-of-day-appropriate activity suggestion.")
+    var movement: GeneratedBriefingCard
+
+    @Guide(description: "THC/cannabis card — urges, their real driver, and how to navigate them today.")
+    var thc: GeneratedBriefingCard
+
+    @Guide(description: "Alcohol card — tonight's intention and its connection to the week's pattern.")
+    var alcohol: GeneratedBriefingCard
 }
 
 private func capitalizeFirst(_ s: String) -> String {
@@ -98,9 +97,8 @@ private func capitalizeFirst(_ s: String) -> String {
     return first.uppercased() + s.dropFirst()
 }
 
-/// Generates briefing cards using Apple's on-device language model, one card per
-/// theme. Falls back gracefully (returns `nil`) whenever the model is
-/// unavailable or declines, so callers can show placeholder content instead.
+/// Generates briefing cards using Apple's on-device language model, all four
+/// themes in a single session so the model can naturally vary them.
 @MainActor
 struct BriefingGenerator {
     /// Whether the on-device model is ready to use on this device right now.
@@ -114,69 +112,77 @@ struct BriefingGenerator {
         String(describing: SystemLanguageModel.default.availability)
     }
 
-    /// Generates a coaching card for each theme. Returns `nil` if the model is
-    /// unavailable or every theme is declined. Individual themes that fail are
-    /// simply omitted from the result.
+    /// Generates all four coaching cards in one session. Returns `nil` if the
+    /// model is unavailable or declines.
     func generateCards(
         for timeOfDay: BriefingView.TimeOfDay,
         context: String
     ) async -> [BriefingCard]? {
         guard Self.isAvailable else { return nil }
 
-        var cards: [BriefingCard] = []
-        for theme in BriefingTheme.allCases {
-            if let card = await generateCard(for: theme, timeOfDay: timeOfDay, context: context) {
-                cards.append(card)
-            }
-        }
-        return cards.isEmpty ? nil : cards
-    }
-
-    /// Generates a single card, returning `nil` if the model declines or errors.
-    private func generateCard(
-        for theme: BriefingTheme,
-        timeOfDay: BriefingView.TimeOfDay,
-        context: String
-    ) async -> BriefingCard? {
         let instructions = """
-        VOICE RULE: Never use first person. Never write "I", "I'm", "I've", or "we". \
-        You have no voice of your own. Address the reader as "you" only, always. \
-        TIME OF DAY RULE: The prompt states the time of day. You MUST match your advice to it — \
-        morning cards set up the day ahead, afternoon cards stay grounded mid-day, evening cards \
-        help outlast urges and wind down. Never give evening advice in a morning card. \
-        CONTENT RULE: Lead with action, not the metric. Never frame anything as a shortfall. \
-        Never quote wellbeing scores as numbers. Treat data as lived experience. \
-        Connect substance guidance to what the person actually cares about, not just a goal number. \
-        Each sentence field is exactly one complete sentence — no more, no less.
+        VOICE: Never first person. No "I", "I'm", "I've", or "we". Address the reader as "you" only.
+
+        TIME: You are writing for \(timeOfDay.promptName). Every card must match this — \
+        morning cards set up the day ahead, afternoon cards stay grounded mid-day, \
+        evening cards help wind down and outlast urges. Never give evening advice in a morning card.
+
+        STRICT LANES — each card draws only from its own data. Do not cross-reference:
+        - Wellbeing card: only check-in responses (energy, mood, stress). Ignore substance amounts and movement.
+        - Movement card: only movement history. Ignore substances and wellbeing scores.
+        - THC card: only THC patterns. Ignore alcohol amounts, movement data, and wellbeing scores.
+        - Alcohol card: only alcohol patterns. Ignore THC, movement data, and wellbeing scores.
+
+        NO INVENTED CONNECTIONS: Never link data across lanes. Low energy does not imply substance use \
+        caused it — do not say so. Weekly substance totals span the past 7 days; the context will tell \
+        you how much was today. Never say "you've already had X" or "you've been using X" unless \
+        the context explicitly shows today's logged use. Never construct a causal story the data does not state.
+
+        CONTENT: Lead with action, not the metric. Never frame anything as a shortfall. \
+        Treat check-in answers as lived experience, not labels to echo back.
+
+        DISTINCTNESS: The four cards must feel clearly different — different angles, structures, metaphors. \
+        No phrase or idea should recur across cards.
+
+        FORMAT: Every sentence field is exactly one complete sentence — no fragments, no run-ons.
         """
 
         let prompt = """
         Time of day: \(timeOfDay.promptName).
         About the person right now: \(context)
-        Write one card focused on \(theme.focus).
+
+        Write four briefing cards. Each must stay strictly within its assigned data lane \
+        and use different language from the other three.
+
+        Wellbeing card focus: \(BriefingTheme.wellbeing.focus)
+        Movement card focus: \(BriefingTheme.movement.focus)
+        THC card focus: \(BriefingTheme.thc.focus)
+        Alcohol card focus: \(BriefingTheme.alcohol.focus)
         """
 
         let session = LanguageModelSession(instructions: instructions)
         do {
             let response = try await session.respond(
                 to: prompt,
-                generating: GeneratedBriefingCard.self,
-                options: GenerationOptions(temperature: 0.5)
+                generating: AllBriefingCards.self,
+                options: GenerationOptions(temperature: 0.7)
             )
-            let g = response.content
-            var title = g.title
-            if title.hasSuffix(".") { title = String(title.dropLast()) }
-            let message = [g.sentence1, g.sentence2, g.sentence3].map(capitalizeFirst).joined(separator: " ")
-            return BriefingCard(
-                title: title,
-                message: message,
-                icon: theme.icon,
-                tint: theme.tint,
-                theme: theme
-            )
+            let all = response.content
+            return [
+                makeCard(all.wellbeing, theme: .wellbeing),
+                makeCard(all.movement, theme: .movement),
+                makeCard(all.thc, theme: .thc),
+                makeCard(all.alcohol, theme: .alcohol)
+            ]
         } catch {
-            // Unavailable, declined by guardrails, context-window, etc.
             return nil
         }
+    }
+
+    private func makeCard(_ g: GeneratedBriefingCard, theme: BriefingTheme) -> BriefingCard {
+        var title = g.title
+        if title.hasSuffix(".") { title = String(title.dropLast()) }
+        let message = [g.sentence1, g.sentence2, g.sentence3].map(capitalizeFirst).joined(separator: " ")
+        return BriefingCard(title: title, message: message, icon: theme.icon, tint: theme.tint, theme: theme)
     }
 }
