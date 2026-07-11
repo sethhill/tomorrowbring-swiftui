@@ -110,9 +110,14 @@ struct BriefingGenerator {
         let instructions = """
         VOICE: Never first person. No "I", "I'm", "I've", or "we". Address the reader as "you" only.
 
-        TIME: You are writing for \(timeOfDay.promptName). Every card must match this — \
-        morning cards set up the day ahead, afternoon cards stay grounded mid-day, \
-        evening cards help wind down and outlast urges. Never give evening advice in a morning card.
+        TIME: You are writing for \(timeOfDay.promptName). \
+        This is not flexible — every card must match the time slot exactly. \
+        Morning → set intentions and direct energy toward the day ahead. \
+        Afternoon → grounded mid-day check, keep momentum, small adjustments. \
+        Evening → wind down, navigate urges, focus on what tonight's choices make possible. \
+        Never write "set up the day ahead", "start the morning", or forward-looking day-framing in an afternoon or evening card. \
+        Never write urge-outlasting or wind-down framing in a morning card. \
+        If you are unsure, reread the time slot and write as though the reader is sitting in that exact moment.
 
         STRICT LANES — each card draws only from its own data. Do not cross-reference:
         - Wellbeing card: only check-in responses (energy, mood, stress). Ignore substance amounts and movement.
