@@ -48,6 +48,20 @@ struct ContentView: View {
     @State private var currentSection: AppSection
     @State private var showMenu = false
 
+    // Watch substance goals so the Substances section appears/disappears reactively.
+    @AppStorage("substanceGoal-THC") private var thcGoalData = Data()
+    @AppStorage("substanceGoal-Alcohol") private var alcoholGoalData = Data()
+
+    private var anySubstanceTracked: Bool {
+        SubstanceGoal.isTracked(data: thcGoalData) || SubstanceGoal.isTracked(data: alcoholGoalData)
+    }
+
+    private var visibleSections: [AppSection] {
+        var sections: [AppSection] = [.briefing, .wellbeing, .movement]
+        if anySubstanceTracked { sections.append(.substances) }
+        return sections
+    }
+
     init(initialSection: AppSection = .briefing) {
         _currentSection = State(initialValue: initialSection)
     }
@@ -73,7 +87,7 @@ struct ContentView: View {
             }
 
             if showMenu {
-                AppMenuOverlay(currentSection: $currentSection, isShowing: $showMenu)
+                AppMenuOverlay(currentSection: $currentSection, isShowing: $showMenu, sections: visibleSections)
                     .transition(.opacity)
                     .zIndex(1)
             }
@@ -85,6 +99,11 @@ struct ContentView: View {
                 .onChanged { _ in lock.resetIdleTimer() }
         )
         .onChange(of: currentSection) { lock.resetIdleTimer() }
+        .onChange(of: anySubstanceTracked) { _, tracked in
+            if !tracked && currentSection == .substances {
+                currentSection = .briefing
+            }
+        }
     }
 
     @ViewBuilder
@@ -114,8 +133,7 @@ struct ContentView: View {
 private struct AppMenuOverlay: View {
     @Binding var currentSection: AppSection
     @Binding var isShowing: Bool
-
-    private let mainSections: [AppSection] = [.briefing, .wellbeing, .movement, .substances]
+    let sections: [AppSection]
 
     var body: some View {
         ZStack {
@@ -137,7 +155,7 @@ private struct AppMenuOverlay: View {
                 Spacer()
 
                 VStack(alignment: .leading, spacing: 0) {
-                    ForEach(mainSections) { section in
+                    ForEach(sections) { section in
                         Button {
                             currentSection = section
                             dismiss()

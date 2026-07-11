@@ -54,7 +54,7 @@ enum BriefingTheme: String, CaseIterable {
             return "tonight's alcohol intention and how it fits the week's pattern — " +
                    "morning: clean slate, set a light intention; afternoon: preview the " +
                    "evening choice before the pull starts; evening: what's gained by holding " +
-                   "back, not what's lost. Near a limit: focus on what staying within it enables."
+                   "back, not what's lost."
         }
     }
 }
@@ -112,11 +112,12 @@ struct BriefingGenerator {
         String(describing: SystemLanguageModel.default.availability)
     }
 
-    /// Generates all four coaching cards in one session. Returns `nil` if the
-    /// model is unavailable or declines.
+    /// Generates coaching cards in one session. Returns `nil` if the model is
+    /// unavailable or declines. Non-tracked substances are omitted from the result.
     func generateCards(
         for timeOfDay: BriefingView.TimeOfDay,
-        context: String
+        context: String,
+        trackedSubstances: Set<SubstanceKind> = Set(SubstanceKind.allCases)
     ) async -> [BriefingCard]? {
         guard Self.isAvailable else { return nil }
 
@@ -133,10 +134,23 @@ struct BriefingGenerator {
         - THC card: only THC patterns. Ignore alcohol amounts, movement data, and wellbeing scores.
         - Alcohol card: only alcohol patterns. Ignore THC, movement data, and wellbeing scores.
 
+        NO INVENTED LIMITS: Never mention a weekly limit, quota, or cap unless the context \
+        explicitly states one with a number. If the goal is tracking-only or reduction, \
+        there is no limit — do not invent one, do not say the person is "nearing" anything.
+
         NO INVENTED CONNECTIONS: Never link data across lanes. Low energy does not imply substance use \
         caused it — do not say so. Weekly substance totals span the past 7 days; the context will tell \
         you how much was today. Never say "you've already had X" or "you've been using X" unless \
         the context explicitly shows today's logged use. Never construct a causal story the data does not state.
+
+        SUBSTANCE SAFETY — ABSOLUTE RULE: Never encourage, suggest, normalise, or depict \
+        alcohol or cannabis consumption in any form. This includes: describing the person \
+        as currently consuming ("as you sip", "while you enjoy", "as you use"), framing use \
+        as a reward or ritual, implying use is a reasonable or expected outcome of the evening, \
+        or treating any amount of use as positive. This rule applies regardless of goal mode — \
+        even tracking-only users must receive guidance oriented toward awareness and restraint, \
+        never toward use. If the card has nothing useful to say without implying use, write \
+        about the urge, the decision point, or what the person gains by pausing instead.
 
         CONTENT: Lead with action, not the metric. Never frame anything as a shortfall. \
         Treat check-in answers as lived experience, not labels to echo back.
@@ -168,12 +182,13 @@ struct BriefingGenerator {
                 options: GenerationOptions(temperature: 0.7)
             )
             let all = response.content
-            return [
+            var cards: [BriefingCard] = [
                 makeCard(all.wellbeing, theme: .wellbeing),
-                makeCard(all.movement, theme: .movement),
-                makeCard(all.thc, theme: .thc),
-                makeCard(all.alcohol, theme: .alcohol)
+                makeCard(all.movement, theme: .movement)
             ]
+            if trackedSubstances.contains(.thc) { cards.append(makeCard(all.thc, theme: .thc)) }
+            if trackedSubstances.contains(.alcohol) { cards.append(makeCard(all.alcohol, theme: .alcohol)) }
+            return cards
         } catch {
             return nil
         }

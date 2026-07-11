@@ -122,6 +122,15 @@ struct BriefingView: View {
     /// The most recently generated briefing, persisted so it isn't regenerated
     /// on every launch within the same time-of-day slot.
     @AppStorage(BriefingView.cacheKey) private var cacheData = Data()
+    @AppStorage("substanceGoal-THC") private var thcGoalData = Data()
+    @AppStorage("substanceGoal-Alcohol") private var alcoholGoalData = Data()
+
+    private var trackedSubstances: Set<SubstanceKind> {
+        var set = Set<SubstanceKind>()
+        if SubstanceGoal.isTracked(data: thcGoalData) { set.insert(.thc) }
+        if SubstanceGoal.isTracked(data: alcoholGoalData) { set.insert(.alcohol) }
+        return set
+    }
 
     private static let cacheKey = "briefingCache"
 
@@ -203,8 +212,9 @@ struct BriefingView: View {
         let available = BriefingGenerator.isAvailable
         let context = BriefingContextBuilder(modelContext: modelContext).build()
         let generator = BriefingGenerator()
+        let tracked = trackedSubstances
         let generated = await withTimeout(seconds: 20) {
-            await generator.generateCards(for: timeOfDay, context: context)
+            await generator.generateCards(for: timeOfDay, context: context, trackedSubstances: tracked)
         }
         if let generated {
             withAnimation(.easeInOut(duration: 0.5)) {
@@ -214,7 +224,7 @@ struct BriefingView: View {
             saveCache(generated)
         } else {
             withAnimation(.easeInOut(duration: 0.5)) {
-                cards = BriefingView.contextualCards(for: timeOfDay, modelContext: modelContext)
+                cards = BriefingView.contextualCards(for: timeOfDay, modelContext: modelContext, trackedSubstances: tracked)
                 status = available ? .fellBackDeclined : .fellBackUnavailable
             }
         }
@@ -334,14 +344,23 @@ extension BriefingView {
     }
 
     /// Generates fallback cards using local data signals when Apple Intelligence is unavailable.
-    static func contextualCards(for timeOfDay: TimeOfDay, modelContext: ModelContext) -> [BriefingCard] {
+    static func contextualCards(
+        for timeOfDay: TimeOfDay,
+        modelContext: ModelContext,
+        trackedSubstances: Set<SubstanceKind> = Set(SubstanceKind.allCases)
+    ) -> [BriefingCard] {
         let s = Signals(modelContext: modelContext)
-        return [
+        var cards: [BriefingCard] = [
             wellbeingCard(timeOfDay: timeOfDay, energyAnswer: s.energyAnswer),
-            movementCard(timeOfDay: timeOfDay, workoutsThisWeek: s.workoutsThisWeek, daysSinceLastWorkout: s.daysSinceLastWorkout),
-            thcCard(timeOfDay: timeOfDay, thisWeek: s.thcThisWeek, goalMode: s.thcGoalMode, weeklyLimit: s.thcWeeklyLimit),
-            alcoholCard(timeOfDay: timeOfDay, thisWeek: s.alcoholThisWeek, goalMode: s.alcoholGoalMode, weeklyLimit: s.alcoholWeeklyLimit)
+            movementCard(timeOfDay: timeOfDay, workoutsThisWeek: s.workoutsThisWeek, daysSinceLastWorkout: s.daysSinceLastWorkout)
         ]
+        if trackedSubstances.contains(.thc) {
+            cards.append(thcCard(timeOfDay: timeOfDay, thisWeek: s.thcThisWeek, goalMode: s.thcGoalMode, weeklyLimit: s.thcWeeklyLimit))
+        }
+        if trackedSubstances.contains(.alcohol) {
+            cards.append(alcoholCard(timeOfDay: timeOfDay, thisWeek: s.alcoholThisWeek, goalMode: s.alcoholGoalMode, weeklyLimit: s.alcoholWeeklyLimit))
+        }
+        return cards
     }
 
     private static func wellbeingCard(timeOfDay: TimeOfDay, energyAnswer: String?) -> BriefingCard {
@@ -433,7 +452,7 @@ extension BriefingView {
                     "You're within your weekly range and the pattern is holding. The most useful thing to watch for is the point where habit takes over from choice — that's when it's worth slowing down and checking whether you actually want this one. The awareness itself tends to change the decision."
                 )
             }
-        case .trackingOnly:
+        case .trackingOnly, .notTracking:
             (title, message) = (
                 "Bank the clear morning",
                 "The morning is when the pull toward cannabis is at its quietest — notice the sharpness and the absence of fog. Let that feeling be the argument for tonight rather than a rule you're forcing on yourself. Carry it forward."

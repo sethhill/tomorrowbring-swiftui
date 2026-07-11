@@ -301,7 +301,7 @@ struct SubstanceTrackerView: View {
         let goal = SubstanceGoal.load(for: kind)
         let goalNote: String
         switch goal.mode {
-        case .trackingOnly:
+        case .notTracking, .trackingOnly:
             goalNote = "They are tracking only with no directional goal — be observational, not prescriptive."
         case .reduction:
             goalNote = "Their goal is general reduction — focus on trend direction, not a fixed number."

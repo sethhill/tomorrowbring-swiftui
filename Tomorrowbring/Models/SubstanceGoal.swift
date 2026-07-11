@@ -8,18 +8,20 @@
 
 import Foundation
 
-/// The four goal modes available per substance.
+/// The goal modes available per substance.
 enum SubstanceGoalMode: String, Codable, CaseIterable, Identifiable {
-    case trackingOnly = "Tracking only"
-    case reduction    = "General reduction"
-    case targeted     = "Targeted reduction"
-    case elimination  = "Total elimination"
+    case notTracking   = "Don't track"
+    case trackingOnly  = "Tracking only"
+    case reduction     = "General reduction"
+    case targeted      = "Targeted reduction"
+    case elimination   = "Total elimination"
 
     var id: String { rawValue }
 
     /// Short description shown in the settings card.
     var detail: String {
         switch self {
+        case .notTracking:  return "This substance is hidden from the app."
         case .trackingOnly: return "Logging without a directional goal."
         case .reduction:    return "Trending lighter over time — no fixed number."
         case .targeted:     return "A specific weekly limit to stay within."
@@ -30,6 +32,7 @@ enum SubstanceGoalMode: String, Codable, CaseIterable, Identifiable {
     /// Compact phrase included in the AI coaching context.
     var coachingNote: String {
         switch self {
+        case .notTracking:  return "not tracking"
         case .trackingOnly: return "no specific goal — tracking only"
         case .reduction:    return "general reduction — directional, no fixed target"
         case .targeted:     return "targeted reduction with a weekly limit"
@@ -62,5 +65,21 @@ struct SubstanceGoal: Codable, Equatable {
 
     static func storageKey(for kind: SubstanceKind) -> String {
         "substanceGoal-\(kind.rawValue)"
+    }
+
+    // MARK: - Tracking helpers
+
+    /// Returns false only when the user has explicitly disabled tracking for this substance.
+    static func isTracked(for kind: SubstanceKind) -> Bool {
+        load(for: kind).mode != .notTracking
+    }
+
+    /// Decodes encoded goal data (from an @AppStorage watcher) to check tracking status.
+    /// Returns true by default when data is absent, preserving existing behaviour for new installs.
+    static func isTracked(data: Data) -> Bool {
+        guard !data.isEmpty,
+              let goal = try? JSONDecoder().decode(SubstanceGoal.self, from: data)
+        else { return true }
+        return goal.mode != .notTracking
     }
 }

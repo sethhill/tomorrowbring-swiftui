@@ -112,6 +112,7 @@ struct BriefingContextBuilder {
             let today = total(kind, from: todayStart, to: tomorrow)
             let goal = SubstanceGoal.load(for: kind)
 
+            guard goal.mode != .notTracking else { continue }
             guard thisWeek > 0 || priorWeek > 0 || goal.mode != .trackingOnly else { continue }
 
             let trend: String
