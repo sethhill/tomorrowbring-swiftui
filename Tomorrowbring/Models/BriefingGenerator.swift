@@ -57,17 +57,11 @@ enum BriefingTheme: String, CaseIterable {
 /// The structured shape for one briefing card.
 @Generable
 struct GeneratedBriefingCard {
-    @Guide(description: "3 to 5 words. Punchy, specific. Sentence case. No trailing period. No clichés.")
+    @Guide(description: "3 to 7 words. Punchy, specific. Sentence case. No trailing period. No clichés.")
     var title: String
 
-    @Guide(description: "One sentence. The felt experience right now — what this person's data means for how they actually feel, not a restatement of numbers or answers. Second person.")
-    var sentence1: String
-
-    @Guide(description: "One sentence. The one concrete thing to do or notice today. Begin with an action verb. Distinctly different in content and phrasing from sentence 1.")
-    var sentence2: String
-
-    @Guide(description: "One sentence. A specific consequence, shift, or observation that deepens the advice — not a generic 'why it matters' statement. Must add something new, not restate sentences 1 or 2.")
-    var sentence3: String
+    @Guide(description: "Exactly four sentences as one cohesive paragraph. Sentence 1: the felt experience right now, translated from data to lived reality — second person, no raw numbers. Sentence 2: the one concrete thing to do or notice today, beginning with an action verb. Sentence 3: a specific consequence or shift that deepens the advice — not a generic restatement. Sentence 4: a closing thought that makes the advice stick — an image, an analogy, or a direct challenge. No fragments, no run-ons.")
+    var paragraph: String
 }
 
 /// Container that generates all three cards in a single model call so the model
@@ -149,7 +143,7 @@ struct BriefingGenerator {
         DISTINCTNESS: All cards must feel clearly different — different angles, structures, metaphors. \
         No phrase or idea should recur across cards.
 
-        FORMAT: Every sentence field is exactly one complete sentence — no fragments, no run-ons.
+        FORMAT: Each paragraph field is exactly four complete sentences — no fragments, no run-ons, no bullet points.
         """
 
         let prompt = """
@@ -188,7 +182,6 @@ struct BriefingGenerator {
     private func makeCard(_ g: GeneratedBriefingCard, theme: BriefingTheme) -> BriefingCard {
         var title = g.title
         if title.hasSuffix(".") { title = String(title.dropLast()) }
-        let message = [g.sentence1, g.sentence2, g.sentence3].map(capitalizeFirst).joined(separator: " ")
-        return BriefingCard(title: title, message: message, icon: theme.icon, tint: theme.tint, theme: theme)
+        return BriefingCard(title: title, message: capitalizeFirst(g.paragraph), icon: theme.icon, tint: theme.tint, theme: theme)
     }
 }

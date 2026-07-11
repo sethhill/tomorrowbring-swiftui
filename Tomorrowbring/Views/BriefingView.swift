@@ -364,13 +364,13 @@ extension BriefingView {
         let (title, message): (String, String) = switch energyAnswer {
         case "Great", "Good":
             ("Make the most of it",
-             "You're coming in with real energy — that's a resource worth steering, not spending. Notice where it goes in the first couple of hours, because that window tends to set the tone for everything that follows. Point it at the thing that calls for actual focus.")
+             "You're coming in with real energy — that's a resource worth steering, not spending. Notice where it goes in the first couple of hours, because that window tends to set the tone for everything that follows. Point it at the thing that calls for actual focus, not the thing that feels easiest to start. The difference between a day that uses your energy and one that's used by it usually comes down to that first deliberate choice.")
         case "Low", "Drained":
             ("Work with what you have",
-             "Your energy is running lean today, and that's honest data worth taking seriously. The instinct to push through tends to cost more than it returns. Give yourself a narrower scope than usual and protect whatever capacity you have rather than trying to manufacture more.")
+             "Your energy is running lean today, and that's honest data worth taking seriously. Give yourself a narrower scope than usual and protect whatever capacity you have rather than trying to manufacture more. The instinct to push through tends to cost more than it returns, especially when the tank is already low. One thing done well at low energy beats three things started and abandoned.")
         default:
             ("Read the morning",
-             "Your check-in gives you a starting point — use it to set the tone rather than just react to the day. Notice where your energy actually is, not where you think it should be. That honest read is the best tool you have for the next few hours.")
+             "Your check-in gives you a starting point — use it to set the tone rather than just react to the day. Notice where your energy actually is, not where you think it should be. That honest read is the best tool you have for the next few hours. The days that go well usually start with that one clear look, not a plan.")
         }
         return BriefingCard(title: title, message: message, icon: "heart.fill", tint: .brandGreen)
     }
@@ -384,29 +384,29 @@ extension BriefingView {
         if let days = daysSinceLastWorkout, days >= 3 {
             (title, message) = (
                 "Reset the clock",
-                "It's been a few days since your last session, and the useful goal is closing the gap rather than making up for it. A short reset today — even ten or fifteen minutes — ends the pause and gives you something to build from. The size of the session doesn't matter nearly as much as the fact of it."
+                "It's been a few days since your last session, and the useful goal is closing the gap rather than making up for it. A short reset today — even ten or fifteen minutes — ends the pause and gives you something to build from. The size of the session doesn't matter nearly as much as the fact of it. Getting back in takes less than it feels like it will."
             )
         } else if workoutsThisWeek >= 3 {
             (title, message) = (
                 "Momentum is doing its work",
-                "You've been showing up consistently this week, and that's the habit working. The useful question now isn't whether to go again but whether to add time or protect the frequency — either lever is valid, so pick the one the day actually has room for."
+                "You've been showing up consistently this week, and that's the habit working. The useful question now isn't whether to go again but whether to add time or protect the frequency — either lever is valid, so pick the one the day actually has room for. Consistency like this is how the baseline shifts without you having to force it. Keep going at whatever pace the week allows."
             )
         } else if workoutsThisWeek > 0 {
             (title, message) = (
                 "Keep the thread going",
-                "You've got some movement in this week and the thread is alive. Keeping it going matters more than the size of the next session — even a short one extends the pattern and gives you something to build on. Steadiness beats intensity when the goal is making this a habit."
+                "You've got some movement in this week and the thread is alive. Keeping it going matters more than the size of the next session — even a short one extends the pattern and gives you something to build on. Steadiness beats intensity when the goal is making this a habit. What you're protecting isn't a streak; it's a direction."
             )
         } else {
             (title, message) = switch timeOfDay {
             case .morning:
                 ("Move before the day fills up",
-                 "The morning window is the one that closes fastest — once the day gets going, movement gets pushed. Even ten easy minutes now keeps momentum alive and shifts the morning in a direction you'll feel later. Steadiness beats intensity every time.")
+                 "The morning window is the one that closes fastest — once the day gets going, movement gets pushed. Even ten easy minutes now keeps momentum alive and shifts the morning in a direction you'll feel later. Steadiness beats intensity every time, especially in weeks where the schedule is full. Start small enough that starting is easy.")
             case .afternoon:
                 ("A little still counts",
-                 "The afternoon still has room for a few easy minutes — movement doesn't have to be all-or-nothing. Even a short loop or some stretching keeps things alive and breaks up the sitting. Momentum is the goal, and small counts.")
+                 "The afternoon still has room for a few easy minutes — movement doesn't have to be all-or-nothing. Even a short loop or some stretching keeps things alive and breaks up the sitting. Momentum is the goal, and small counts toward it as much as long. You'll rarely regret taking a few minutes; you often regret not taking them.")
             case .evening:
                 ("Keep the streak going",
-                 "Consistency is doing the real work here, even when the sessions are short. A little gentle movement at home or some stretching keeps the momentum alive without overdoing it. Steady effort, lighter evenings, decent sleep.")
+                 "Consistency is doing the real work here, even when the sessions are short. A little gentle movement at home or some stretching keeps the momentum alive without overdoing it. Steady effort, lighter evenings, decent sleep — those things reinforce each other. Tonight doesn't need to be a workout; it just needs to be something.")
             }
         }
         return BriefingCard(title: title, message: message, icon: "figure.walk", tint: .brandGold)
@@ -426,7 +426,7 @@ extension BriefingView {
         if thcTracked && s.thcGoalMode == .elimination && s.thcThisWeek > 0 {
             return BriefingCard(
                 title: "Today is the reset",
-                message: "If things didn't go the way you planned, today is the reset — not a setback. Urges tend to cluster for a day or two after a slip; notice when the pull starts building and name what's actually underneath it before acting on it. That pause is where the real choice lives.",
+                message: "If things didn't go the way you planned, today is the reset — not a setback. Urges tend to cluster for a day or two after a slip; notice when the pull starts building and name what's actually underneath it before acting on it. That pause is where the real choice lives. The streak starts the moment you decide it does.",
                 icon: icon, tint: tint
             )
         }
@@ -435,7 +435,7 @@ extension BriefingView {
         if alcoholTracked, let limit = s.alcoholWeeklyLimit, limit > 0, s.alcoholThisWeek / limit >= 0.8 {
             return BriefingCard(
                 title: "Worth pausing tonight",
-                message: "You're close to your weekly limit and the week still has days left — that math tends to get tighter than it looks. The question tonight isn't about willpower; it's about what you'd rather wake up with tomorrow. Decide now, before the evening starts making the case for you.",
+                message: "You're close to your weekly limit and the week still has days left — that math tends to get tighter than it looks. The question tonight isn't about willpower; it's about what you'd rather wake up with tomorrow. Decide now, before the evening starts making the case for you. A choice made in advance, while you're clear-headed, holds better than one made in the moment.",
                 icon: icon, tint: tint
             )
         }
@@ -444,7 +444,7 @@ extension BriefingView {
         if thcTracked, let limit = s.thcWeeklyLimit, limit > 0, s.thcThisWeek / limit >= 0.8 {
             return BriefingCard(
                 title: "Stay ahead of the math",
-                message: "You're close to your weekly range with time still to go — that tends to get tighter than expected. The useful framing isn't restriction; it's what staying within it makes possible for the rest of the week. Notice whether the next one is a genuine choice or just the habit of the hour.",
+                message: "You're close to your weekly range with time still to go — that tends to get tighter than expected. The useful framing isn't restriction; it's what staying within it makes possible for the rest of the week. Notice whether the next one is a genuine choice or just the habit of the hour. The awareness itself is what changes the count over time.",
                 icon: icon, tint: tint
             )
         }
@@ -458,7 +458,7 @@ extension BriefingView {
             }
             return BriefingCard(
                 title: "Building something real",
-                message: "Each day that goes this way adds to a clearer baseline — not just a streak, but actual signal about how you feel when things are clean. \(anchor) Decide how you want to handle the next few hours before the pull starts making its case.",
+                message: "Each day that goes this way adds to a clearer baseline — not just a streak, but actual signal about how you feel when things are clean. \(anchor) Decide how you want to handle the next few hours before the pull starts making its case. That decision, made now while it's easy, is what holds when it gets harder later.",
                 icon: icon, tint: tint
             )
         }
@@ -472,7 +472,7 @@ extension BriefingView {
             }
             return BriefingCard(
                 title: "Nothing to manage yet",
-                message: "The week has been clean on drinks so far, and that gives you useful signal about how you've been feeling. \(anchor) Notice whether the difference shows up in sleep, energy, or how the mornings feel — that's the data worth carrying forward.",
+                message: "The week has been clean on drinks so far, and that gives you useful signal about how you've been feeling. \(anchor) Notice whether the difference shows up in sleep, energy, or how the mornings feel. That's the data worth carrying forward into the rest of the week.",
                 icon: icon, tint: tint
             )
         }
