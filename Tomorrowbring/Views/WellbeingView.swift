@@ -378,8 +378,7 @@ private struct WellbeingTrendChart: View {
         let calendar = Calendar.current
         let today = calendar.startOfDay(for: .now)
         let start = calendar.date(byAdding: .day, value: -6, to: today) ?? today
-        let end = calendar.date(byAdding: .hour, value: 12, to: today) ?? today
-        return start...end
+        return start...today
     }
 
     var body: some View {
@@ -408,7 +407,7 @@ private struct WellbeingTrendChart: View {
                 Chart(points) { point in
                     let displayValue = point.value + point.metric.displayOffset
                     LineMark(
-                        x: .value("Day", point.date, unit: .day),
+                        x: .value("Day", point.date),
                         y: .value("Score", displayValue),
                         series: .value("Metric", point.metric.rawValue)
                     )
@@ -421,11 +420,12 @@ private struct WellbeingTrendChart: View {
                 }
                 .chartLegend(.hidden)
                 .chartYAxis(.hidden)
+                .chartYAxisStyle { $0.frame(width: 0) }
                 .chartYScale(domain: -0.05...1.05)
                 .chartXScale(domain: xDomain)
                 .chartXAxis {
                     AxisMarks(values: .stride(by: .day)) { _ in
-                        AxisValueLabel(format: .dateTime.weekday(.narrow), centered: true)
+                        AxisValueLabel(format: .dateTime.weekday(.narrow))
                             .font(.appCaption2)
                     }
                 }
