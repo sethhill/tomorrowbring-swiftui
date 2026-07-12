@@ -21,6 +21,7 @@ struct SubstanceTrackerView: View {
     @AppStorage private var insightCacheData: Data
 
     @State private var isLogging = false
+    @State private var headline = ""
     @State private var condition: String
     @State private var coaching: String
     @State private var isGeneratingInsight = false
@@ -55,7 +56,7 @@ struct SubstanceTrackerView: View {
             insightSection
                 .listRowBackground(Color.appBackground)
                 .listRowSeparator(.hidden)
-                .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
+                .listRowInsets(EdgeInsets(top: 20, leading: 16, bottom: 8, trailing: 16))
 
             recentSectionHeader
                 .listRowBackground(Color.appBackground)
@@ -216,6 +217,11 @@ struct SubstanceTrackerView: View {
 
     private var insightSection: some View {
         VStack(alignment: .leading, spacing: 16) {
+            if !headline.isEmpty {
+                Text(headline)
+                    .font(.appTitle3)
+                    .foregroundStyle(.brandGold)
+            }
             Text(condition)
                 .font(.appBody)
                 .foregroundStyle(.primary)
@@ -228,7 +234,7 @@ struct SubstanceTrackerView: View {
                     .foregroundStyle(.secondary)
             }
         }
-        .id(condition + coaching)
+        .id(headline + condition + coaching)
         .transition(.opacity)
     }
 
@@ -267,6 +273,7 @@ struct SubstanceTrackerView: View {
         let signature = dataSignature
 
         if !forceRefresh, let cached = loadInsightCache(), cached.signature == signature {
+            headline = cached.headline ?? ""
             condition = cached.condition
             coaching = cached.coaching
             insightIsAIGenerated = true
@@ -283,6 +290,7 @@ struct SubstanceTrackerView: View {
         }
         if let insight {
             withAnimation(.easeInOut(duration: 0.5)) {
+                headline = insight.headline
                 condition = insight.condition
                 coaching = insight.coaching
                 insightIsAIGenerated = true
@@ -290,6 +298,7 @@ struct SubstanceTrackerView: View {
             saveInsightCache(signature: signature, insight: insight)
         } else {
             withAnimation(.easeInOut(duration: 0.5)) {
+                headline = ""
                 condition = Self.placeholderCondition
                 coaching = Self.placeholderCoaching
                 insightIsAIGenerated = false
@@ -369,6 +378,7 @@ struct SubstanceTrackerView: View {
     private func saveInsightCache(signature: String, insight: Insight) {
         let cached = CachedInsight(
             signature: signature,
+            headline: insight.headline,
             condition: insight.condition,
             coaching: insight.coaching
         )

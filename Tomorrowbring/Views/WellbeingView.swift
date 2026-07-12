@@ -14,6 +14,7 @@ import Charts
 struct WellbeingView: View {
     @Query(sort: \CheckInEntry.timestamp, order: .reverse) private var checkIns: [CheckInEntry]
 
+    @State private var headline = ""
     @State private var condition = WellbeingView.placeholderCondition
     @State private var coaching = WellbeingView.placeholderCoaching
     @State private var isGeneratingInsight = false
@@ -37,6 +38,7 @@ struct WellbeingView: View {
 
                 barometerSection
                 trendSection
+                    .padding(.bottom, 8)
                 insightSection
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -186,6 +188,11 @@ struct WellbeingView: View {
 
     private var insightSection: some View {
         VStack(alignment: .leading, spacing: 16) {
+            if !headline.isEmpty {
+                Text(headline)
+                    .font(.appTitle3)
+                    .foregroundStyle(.brandGold)
+            }
             Text(condition)
                 .font(.appBody)
                 .foregroundStyle(.primary)
@@ -198,7 +205,7 @@ struct WellbeingView: View {
                     .foregroundStyle(.secondary)
             }
         }
-        .id(condition + coaching)
+        .id(headline + condition + coaching)
         .transition(.opacity)
     }
 
@@ -224,6 +231,7 @@ struct WellbeingView: View {
         let signature = dataSignature
 
         if !forceRefresh, let cached = loadInsightCache(), cached.signature == signature {
+            headline = cached.headline ?? ""
             condition = cached.condition
             coaching = cached.coaching
             insightIsAIGenerated = true
@@ -240,6 +248,7 @@ struct WellbeingView: View {
         }
         if let insight {
             withAnimation(.easeInOut(duration: 0.5)) {
+                headline = insight.headline
                 condition = insight.condition
                 coaching = insight.coaching
                 insightIsAIGenerated = true
@@ -247,6 +256,7 @@ struct WellbeingView: View {
             saveInsightCache(signature: signature, insight: insight)
         } else {
             withAnimation(.easeInOut(duration: 0.5)) {
+                headline = ""
                 condition = Self.placeholderCondition
                 coaching = Self.placeholderCoaching
                 insightIsAIGenerated = false
@@ -305,6 +315,7 @@ struct WellbeingView: View {
     private func saveInsightCache(signature: String, insight: Insight) {
         let cached = CachedInsight(
             signature: signature,
+            headline: insight.headline,
             condition: insight.condition,
             coaching: insight.coaching
         )

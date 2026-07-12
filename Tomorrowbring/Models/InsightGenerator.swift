@@ -8,17 +8,20 @@
 import Foundation
 import FoundationModels
 
-/// The display model returned to callers — two joined paragraphs.
+/// The display model returned to callers — a headline and two joined paragraphs.
 struct Insight {
+    var headline: String
     var condition: String
     var coaching: String
 }
 
-/// Six focused one-sentence fields. Structured generation guarantees every field
-/// is populated, so the model can't stop early — enforcing exactly 3 sentences
-/// per paragraph regardless of instruction-following quality.
+/// Seven focused fields — a headline then six one-sentence fields. Structured generation
+/// guarantees every field is populated, enforcing exactly 3 sentences per paragraph.
 @Generable
 struct GeneratedInsight {
+    @Guide(description: "3 to 5 words. A punchy, specific headline that captures the single most useful thing from this insight. Sentence case. No trailing period. No clichés like 'making progress' or 'keep it up'.")
+    var headline: String
+
     @Guide(description: "One sentence. The immediate felt state — what the check-in data means as a single lived experience. Second person. No numbers.")
     var conditionSentence1: String
 
@@ -42,6 +45,7 @@ struct GeneratedInsight {
 /// only regenerates when the underlying data changes.
 struct CachedInsight: Codable {
     var signature: String
+    var headline: String?
     var condition: String
     var coaching: String
 }
@@ -71,7 +75,10 @@ struct InsightGenerator {
                 options: GenerationOptions(temperature: 0.5)
             )
             let g = response.content
+            var headline = capitalizeFirst(g.headline.lowercased())
+            if headline.hasSuffix(".") { headline = String(headline.dropLast()) }
             return Insight(
+                headline: headline,
                 condition: [g.conditionSentence1, g.conditionSentence2, g.conditionSentence3].map(capitalizeFirst).joined(separator: " "),
                 coaching: [g.coachingSentence1, g.coachingSentence2, g.coachingSentence3].map(capitalizeFirst).joined(separator: " ")
             )

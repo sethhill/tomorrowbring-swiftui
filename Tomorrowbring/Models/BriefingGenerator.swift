@@ -57,7 +57,7 @@ enum BriefingTheme: String, CaseIterable {
 /// The structured shape for one briefing card.
 @Generable
 struct GeneratedBriefingCard {
-    @Guide(description: "3 to 7 words. Punchy, specific. Sentence case. No trailing period. No clichés.")
+    @Guide(description: "One complete sentence, 6 to 10 words. A specific, grounded statement that introduces the paragraph — not a fragment or a label. Sentence case. No trailing period.")
     var title: String
 
     @Guide(description: "Exactly four sentences as one cohesive paragraph. Sentence 1: the felt experience right now, translated from data to lived reality — second person, no raw numbers. Sentence 2: the one concrete thing to do or notice today, beginning with an action verb. Sentence 3: a specific consequence or shift that deepens the advice — not a generic restatement. Sentence 4: a closing thought that makes the advice stick — an image, an analogy, or a direct challenge. No fragments, no run-ons.")
@@ -185,7 +185,7 @@ struct BriefingGenerator {
     }
 
     private func makeCard(_ g: GeneratedBriefingCard, theme: BriefingTheme) -> BriefingCard {
-        var title = g.title
+        var title = capitalizeFirst(g.title)
         if title.hasSuffix(".") { title = String(title.dropLast()) }
         return BriefingCard(title: title, message: capitalizeFirst(g.paragraph), icon: theme.icon, tint: theme.tint, theme: theme)
     }
