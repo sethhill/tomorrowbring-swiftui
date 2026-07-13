@@ -14,16 +14,21 @@ import SwiftData
 struct BriefingContextBuilder {
     let modelContext: ModelContext
 
-    /// Builds the context string. Returns an encouraging general note when
-    /// nothing has been logged yet.
-    func build(now: Date = .now) -> String {
+    /// Builds the context string. Pass `weatherContext` to include current
+    /// conditions (used by the movement card). Returns an encouraging general
+    /// note when nothing has been logged yet.
+    func build(weatherContext: String? = nil, now: Date = .now) -> String {
         let calendar = Calendar.current
-        let parts = [
+        var parts = [
             movementSummary(now: now, calendar: calendar),
             substanceSummary(now: now, calendar: calendar),
             wellbeingSummary(now: now, calendar: calendar),
             checkInSummary(now: now, calendar: calendar)
         ].compactMap { $0 }
+
+        if let weather = weatherContext {
+            parts.insert("Weather: \(weather)", at: 0)
+        }
 
         if parts.isEmpty {
             return "They haven't logged anything yet, so keep the guidance general, warm, and encouraging."

@@ -2,6 +2,8 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Tomorrowbring uses your location to show current weather conditions, so coaching suggestions account for whether it's a good day to be outside.</string>
 	<key>UIAppFonts</key>
 	<array>
 		<string>BanterGrotesk-Regular.otf</string>
@@ -9,9 +11,5 @@
 		<string>BanterGrotesk-Semibold.otf</string>
 		<string>BanterGrotesk-Black.otf</string>
 	</array>
-	<key>NSHealthShareUsageDescription</key>
-	<string>Tomorrowbring reads your sleep and activity data to personalize your daily briefing and track your wellbeing over time.</string>
-	<key>NSHealthUpdateUsageDescription</key>
-	<string>Tomorrowbring may write health data to keep your activity and wellbeing records in sync with Apple Health.</string>
 </dict>
 </plist>

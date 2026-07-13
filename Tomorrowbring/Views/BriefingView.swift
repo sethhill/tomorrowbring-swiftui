@@ -93,6 +93,7 @@ struct BriefingView: View {
     }
 
     @Environment(\.modelContext) private var modelContext
+    @Environment(WeatherStore.self) private var weatherStore
 
     private var timeOfDay: TimeOfDay { .current }
 
@@ -210,7 +211,8 @@ struct BriefingView: View {
         defer { isGenerating = false }
 
         let available = BriefingGenerator.isAvailable
-        let context = BriefingContextBuilder(modelContext: modelContext).build()
+        await weatherStore.load()
+        let context = BriefingContextBuilder(modelContext: modelContext).build(weatherContext: weatherStore.info?.contextString)
         let generator = BriefingGenerator()
         let tracked = trackedSubstances
         let generated = await withTimeout(seconds: 20) {
@@ -282,6 +284,14 @@ struct BriefingView: View {
             Text(Self.dateFormatter.string(from: .now))
                 .font(.appTitle3)
                 .foregroundStyle(.secondary)
+            if let weather = weatherStore.info {
+                let weatherLine = [weather.displayLine, weather.forecastNote]
+                    .compactMap { $0 }
+                    .joined(separator: " · ")
+                Text(weatherLine)
+                    .font(.appTitle3)
+                    .foregroundStyle(.secondary)
+            }
         }
     }
 }

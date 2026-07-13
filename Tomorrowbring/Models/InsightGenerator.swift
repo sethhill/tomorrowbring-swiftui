@@ -48,6 +48,9 @@ struct CachedInsight: Codable {
     var headline: String?
     var condition: String
     var coaching: String
+    /// Whether this insight was generated with weather context available.
+    /// A cached insight without weather will be regenerated when weather becomes available.
+    var hasWeather: Bool = false
 }
 
 private func capitalizeFirst(_ s: String) -> String {

@@ -272,7 +272,9 @@
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
 				INFOPLIST_KEY_NSFaceIDUsageDescription = "Unlock tomorrowbring to view your private wellbeing data.";
-				INFOPLIST_KEY_NSHealthShareUsageDescription = "Tomorrowbring reads your workouts to show your recent movement.";
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "Tomorrowbring reads your sleep and activity data to personalize your daily briefing and track your wellbeing over time.";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "Tomorrowbring may write health data to keep your activity and wellbeing records in sync with Apple Health.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -325,7 +327,9 @@
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
 				INFOPLIST_KEY_NSFaceIDUsageDescription = "Unlock tomorrowbring to view your private wellbeing data.";
-				INFOPLIST_KEY_NSHealthShareUsageDescription = "Tomorrowbring reads your workouts to show your recent movement.";
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "Tomorrowbring reads your sleep and activity data to personalize your daily briefing and track your wellbeing over time.";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "Tomorrowbring may write health data to keep your activity and wellbeing records in sync with Apple Health.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;

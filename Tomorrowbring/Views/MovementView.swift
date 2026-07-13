@@ -18,6 +18,8 @@ struct MovementView: View {
     @State private var healthNote: String?
     @State private var isLogging = false
 
+    @Environment(WeatherStore.self) private var weatherStore
+
     @State private var headline = ""
     @State private var condition = MovementView.placeholderCondition
     @State private var coaching = MovementView.placeholderCoaching
@@ -156,6 +158,7 @@ struct MovementView: View {
         }
         .task {
             await loadHealthWorkouts()
+            await weatherStore.load()
             await loadOrGenerateInsight()
         }
         .onChange(of: manualEntries.count) { _, _ in
@@ -331,11 +334,14 @@ struct MovementView: View {
         let signature = dataSignature
 
         if !forceRefresh, let cached = loadInsightCache(), cached.signature == signature {
-            headline = cached.headline ?? ""
-            condition = cached.condition
-            coaching = cached.coaching
-            insightIsAIGenerated = true
-            return
+            // Regenerate if weather is now available but the cached insight was built without it
+            if weatherStore.info == nil || cached.hasWeather {
+                headline = cached.headline ?? ""
+                condition = cached.condition
+                coaching = cached.coaching
+                insightIsAIGenerated = true
+                return
+            }
         }
 
         isGeneratingInsight = true
@@ -426,6 +432,9 @@ struct MovementView: View {
             let remaining = max(0, target - thisWeekActs.count)
             parts.append("Target: \(target) sessions/week. Remaining this week: \(remaining).")
         }
+        if let weather = weatherStore.info?.contextString {
+            parts.append(weather)
+        }
         return parts.joined(separator: " ")
     }
 
@@ -438,7 +447,8 @@ struct MovementView: View {
             signature: signature,
             headline: insight.headline,
             condition: insight.condition,
-            coaching: insight.coaching
+            coaching: insight.coaching,
+            hasWeather: weatherStore.info != nil
         )
         insightCacheData = (try? JSONEncoder().encode(cached)) ?? Data()
     }
@@ -482,6 +492,8 @@ struct MovementView: View {
         Second paragraph: one specific action for today. If there has been a gap, frame it as resetting \
         the clock — a short session ends the gap and that is enough. If the week is going well, note \
         whether duration or frequency is the better lever. Never frame anything as a shortfall. \
+        If weather conditions are provided and unsuitable for outdoor activity, suggest an indoor \
+        alternative — never recommend going outside when conditions are poor. \
         \(goalNote)
         """
     }
@@ -505,6 +517,7 @@ struct MovementView: View {
         healthNote = "Apple Health isn't available on this platform — showing manual entries only."
         #endif
     }
+
 }
 
 #Preview {

@@ -38,7 +38,10 @@ enum BriefingTheme: String, CaseIterable {
         case .wellbeing:
             return "the person's energy, mood, and stress from the latest check-in — " +
                    "translate to felt experience (no raw words), connect to something " +
-                   "they can concretely notice or protect today."
+                   "they can concretely notice or protect today. " +
+                   "If weather is provided and notably poor (storms, heavy rain, extreme heat or cold), " +
+                   "you may use it as environmental context that could explain or amplify the felt state — " +
+                   "but check-in data is primary, and mild weather should not be mentioned."
         case .movement:
             return "a specific, realistic movement suggestion matched to time of day — " +
                    "morning: move before the day fills up; afternoon: a break keeps momentum; " +
@@ -68,7 +71,7 @@ struct GeneratedBriefingCard {
 /// can vary language, angle, and metaphor across them naturally.
 @Generable
 struct AllBriefingCards {
-    @Guide(description: "Wellbeing card — energy, mood, and stress translated to felt experience.")
+    @Guide(description: "Wellbeing card — energy, mood, and stress translated to felt experience. Reference weather only if conditions are notably poor and directly relevant to the felt state.")
     var wellbeing: GeneratedBriefingCard
 
     @Guide(description: "Movement card — a specific, time-of-day-appropriate activity suggestion.")
@@ -120,9 +123,9 @@ struct BriefingGenerator {
         If you are unsure, reread the time slot and write as though the reader is sitting in that exact moment.
 
         STRICT LANES — each card draws only from its own data. Do not cross-reference:
-        - Wellbeing card: only check-in responses (energy, mood, stress). Ignore substance amounts and movement.
-        - Movement card: only movement history. Ignore substances and wellbeing scores.
-        - Substances card: only substance patterns (THC and/or alcohol, whichever appear in the data). Ignore movement data and wellbeing scores.
+        - Wellbeing card: check-in responses (energy, mood, stress) are primary. If weather is provided and notably poor (storms, heavy rain, extreme heat or cold), you may reference it as environmental context that could explain or amplify the felt state. Do not mention weather if conditions are mild or moderate. Ignore substance amounts and movement.
+        - Movement card: movement history and current weather conditions (if provided). Ignore substances and wellbeing scores. If weather is unsuitable for outdoor activity, suggest an indoor alternative — never recommend going outside when conditions are poor.
+        - Substances card: only substance patterns (THC and/or alcohol, whichever appear in the data). Ignore movement data, wellbeing scores, and weather.
 
         NO INVENTED LIMITS: Never mention a weekly limit, quota, or cap unless the context \
         explicitly states one with a number. If the goal is tracking-only or reduction, \
